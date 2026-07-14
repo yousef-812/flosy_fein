@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification,@raw/notification_1,@raw/notification_2,@raw/notification_3,@raw/salli_ala_muhammad" />
