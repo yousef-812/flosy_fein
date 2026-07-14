@@ -178,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(7),
-                                    child: Image.asset('assets/branding/coin.png', width: 14, height: 14, fit: BoxFit.cover),
+                                    child: Image.asset('assets/branding/coin.jpg', width: 14, height: 14, fit: BoxFit.cover),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
@@ -219,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: ListTile(
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.asset('assets/branding/gift.png', width: 36, height: 36, fit: BoxFit.cover),
+                            child: Image.asset('assets/branding/gift.jpg', width: 36, height: 36, fit: BoxFit.cover),
                           ),
                           title: Text(
                             languageProvider.translate('daily_checkin_title'),
@@ -453,17 +453,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(40),
                               child: Image.asset(
-                                'assets/branding/mascot_waiting.png',
+                                'assets/branding/mascot_waiting.jpg',
                                 width: 80,
                                 height: 80,
                                 fit: BoxFit.cover,
                               ),
                             ),
                             const SizedBox(height: 12),
-                            const Text(
-                              'لسه مفيش مصاريف متسجلة خالص!\nفلوسك في أمان لحد دلوقتي.',
+                            Text(
+                              languageProvider.translate('empty_state_msg'),
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16, height: 1.5, fontFamily: 'Amiri'),
+                              style: const TextStyle(fontSize: 16, height: 1.5),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
@@ -474,7 +474,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
                                 );
                               },
-                              child: const Text('سجل أول عملية الآن', style: TextStyle(fontFamily: 'Amiri')),
+                              child: Text(languageProvider.translate('empty_state_btn')),
                             ),
                           ],
                         ),

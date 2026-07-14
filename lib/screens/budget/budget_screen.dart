@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
 import '../../core/utils/ad_helper.dart';
 
@@ -58,6 +59,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final limit = double.tryParse(limitText);
     if (limit == null || limit <= 0) return;
 
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+
     void performSave() {
       Provider.of<TransactionProvider>(context, listen: false)
           .setBudget(_selectedCategory, limit);
@@ -65,7 +68,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تم تحديد ميزانية لـ $_selectedCategory بنجاح! 🎯', style: const TextStyle(fontFamily: 'Amiri')),
+          content: Text(
+            languageProvider
+                .translate('budget_added_success')
+                .replaceFirst('{}', languageProvider.translateCategory(_selectedCategory)),
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -90,6 +97,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   void _showAddBudgetDialog() {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -110,10 +118,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'تحديد ميزانية لفئة',
+                  Text(
+                    lp.translate('set_budget_category'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   
@@ -121,8 +129,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   DropdownButtonFormField<String>(
                     value: _selectedCategory,
                     decoration: InputDecoration(
-                      labelText: 'اختر الفئة',
-                      labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                      labelText: lp.translate('select_category_label'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     items: CategoryModel.defaultCategories.map((cat) {
@@ -132,7 +139,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           children: [
                             Icon(cat.icon, color: cat.color),
                             const SizedBox(width: 10),
-                            Text(cat.name, style: const TextStyle(fontFamily: 'Amiri')),
+                            Text(lp.translateCategory(cat.name)),
                           ],
                         ),
                       );
@@ -152,8 +159,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                     controller: _limitController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'الحد الأقصى (الميزانية المسموحة)',
-                      labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                      labelText: lp.translate('budget_limit_hint'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       prefixIcon: const Icon(Icons.currency_exchange),
                     ),
@@ -167,7 +173,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('حفظ الميزانية', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+                    child: Text(lp.translate('save_budget'), style: const TextStyle(fontSize: 18)),
                   ),
                 ],
               ),
@@ -180,9 +186,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الميزانيات الشهرية', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('monthly_budgets')),
         centerTitle: true,
       ),
       body: Consumer<TransactionProvider>(
@@ -198,16 +206,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   children: [
                     Icon(Icons.pie_chart_outline, size: 64, color: Colors.grey.shade400),
                     const SizedBox(height: 16),
-                    const Text(
-                      'لم تقم بتحديد أي ميزانيات بعد.\nحدد حدوداً لصرفك اليومي لتتحكم في مصاريفك!',
+                    Text(
+                      languageProvider.translate('no_budgets_msg'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, height: 1.5, fontFamily: 'Amiri', color: Colors.grey),
+                      style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.grey),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
                       onPressed: _showAddBudgetDialog,
                       icon: const Icon(Icons.add),
-                      label: const Text('تحديد ميزانية الآن', style: TextStyle(fontFamily: 'Amiri')),
+                      label: Text(languageProvider.translate('set_budget_now')),
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
@@ -256,8 +264,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
                               Icon(category.icon, color: category.color),
                               const SizedBox(width: 8),
                               Text(
-                                budget.categoryName,
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                                languageProvider.translateCategory(budget.categoryName),
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -288,15 +296,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'المستهلك: ${budget.spentAmount.toStringAsFixed(2)} $currency',
+                            languageProvider.translate('consumed_amount')
+                                .replaceFirst('{}', budget.spentAmount.toStringAsFixed(2))
+                                .replaceFirst('{}', currency),
                             style: TextStyle(
                               fontSize: 14, 
                               fontWeight: FontWeight.bold,
-                              color: isOverrun ? Colors.red : Colors.black87,
+                              color: isOverrun ? Colors.red : null,
                             ),
                           ),
                           Text(
-                            'الحد: ${budget.limitAmount.toStringAsFixed(2)} $currency',
+                            languageProvider.translate('limit_amount')
+                                .replaceFirst('{}', budget.limitAmount.toStringAsFixed(2))
+                                .replaceFirst('{}', currency),
                             style: const TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
@@ -304,15 +316,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                       
                       if (isOverrun) ...[
                         const SizedBox(height: 8),
-                        const Text(
-                          '⚠️ لقد تجاوزت الميزانية المحددة لهذه الفئة!',
-                          style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                        Text(
+                          languageProvider.translate('budget_exceeded_warning'),
+                          style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ] else if (isWarning) ...[
                         const SizedBox(height: 8),
-                        const Text(
-                          '⚠️ اقتربت من تجاوز ميزانية هذه الفئة (أكثر من 80%)',
-                          style: TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                        Text(
+                          languageProvider.translate('budget_warning_80'),
+                          style: const TextStyle(color: Colors.orange, fontSize: 12, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ],

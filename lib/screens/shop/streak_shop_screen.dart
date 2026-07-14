@@ -117,7 +117,7 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.asset('assets/branding/coin.png', width: 32, height: 32, fit: BoxFit.cover),
+                          child: Image.asset('assets/branding/coin.jpg', width: 32, height: 32, fit: BoxFit.cover),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -190,7 +190,7 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                                     children: [
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
-                                        child: Image.asset('assets/branding/coin.png', width: 16, height: 16, fit: BoxFit.cover),
+                                        child: Image.asset('assets/branding/coin.jpg', width: 16, height: 16, fit: BoxFit.cover),
                                       ),
                                       const SizedBox(width: 6),
                                       Text(

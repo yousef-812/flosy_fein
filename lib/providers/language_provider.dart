@@ -66,4 +66,18 @@ class LanguageProvider extends ChangeNotifier {
   String translate(String key) {
     return _localizedStrings[key] ?? key;
   }
+
+  String translateCategory(String catName) {
+    switch (catName) {
+      case 'طعام وشراب': return translate('cat_food');
+      case 'مواصلات': return translate('cat_transport');
+      case 'تسوق': return translate('cat_shopping');
+      case 'سكن وفواتير': return translate('cat_housing');
+      case 'صحة وعلاج': return translate('cat_health');
+      case 'ترفيه وسفر': return translate('cat_entertainment');
+      case 'تعليم': return translate('cat_education');
+      case 'أخرى': return translate('cat_other');
+      default: return catName;
+    }
+  }
 }

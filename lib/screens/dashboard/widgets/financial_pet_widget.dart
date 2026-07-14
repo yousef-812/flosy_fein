@@ -69,33 +69,33 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
     }
 
     // Determine Pet State
-    String petImagePath = 'assets/branding/mascot_happy.png';
+    String petImagePath = 'assets/branding/mascot_happy.jpg';
     String petMood = languageProvider.translate('pet_mood_normal');
     String petComment = languageProvider.translate('pet_comment_normal');
     Color moodColor = Colors.blue;
 
     if (_showHearts) {
-      petImagePath = 'assets/branding/mascot_happy.png';
+      petImagePath = 'assets/branding/mascot_happy.jpg';
       petMood = languageProvider.translate('pet_mood_fed');
       petComment = languageProvider.translate('pet_comment_fed');
       moodColor = Colors.pink;
     } else if (isOverrun) {
-      petImagePath = 'assets/branding/mascot_sad.png';
+      petImagePath = 'assets/branding/mascot_sad.jpg';
       petMood = languageProvider.translate('pet_mood_overrun');
       petComment = languageProvider.translate('pet_comment_overrun');
       moodColor = Colors.red;
     } else if (isWarning) {
-      petImagePath = 'assets/branding/mascot_worried.png';
+      petImagePath = 'assets/branding/mascot_worried.jpg';
       petMood = languageProvider.translate('pet_mood_warning');
       petComment = languageProvider.translate('pet_comment_warning');
       moodColor = Colors.orange;
     } else if (balance < 0) {
-      petImagePath = 'assets/branding/mascot_sad.png';
+      petImagePath = 'assets/branding/mascot_sad.jpg';
       petMood = languageProvider.translate('pet_mood_negative');
       petComment = languageProvider.translate('pet_comment_negative');
       moodColor = Colors.purple;
     } else if (expenses < 0.3 * income && income > 0) {
-      petImagePath = 'assets/branding/mascot_gold.png';
+      petImagePath = 'assets/branding/mascot_gold.jpg';
       petMood = languageProvider.translate('pet_mood_gold');
       petComment = languageProvider.translate('pet_comment_gold');
       moodColor = Colors.green;
@@ -138,7 +138,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                       Positioned(
                         top: 0,
                         right: 0,
-                        child: Image.asset('assets/branding/heart.png', width: 22, height: 22),
+                        child: Image.asset('assets/branding/heart.jpg', width: 22, height: 22),
                       ),
                   ],
                 ),
@@ -200,7 +200,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                     const SizedBox(width: 4),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),
-                      child: Image.asset('assets/branding/coin.png', width: 12, height: 12, fit: BoxFit.cover),
+                      child: Image.asset('assets/branding/coin.jpg', width: 12, height: 12, fit: BoxFit.cover),
                     ),
                   ],
                 ),
