@@ -19,22 +19,22 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
   final List<Map<String, dynamic>> _shopItems = [
     {
       'id': 'theme_gold',
-      'title': 'السمة الذهبية الملكية 👑',
-      'desc': 'مظهر ذهبي مشع يعطي التطبيق هيبة الملوك والثراء الفاحش!',
+      'title': 'Royal Golden Theme 👑',
+      'desc': 'Royal golden theme for the app!',
       'price': 100,
       'type': 'theme',
     },
     {
       'id': 'theme_autumn',
-      'title': 'المظهر الخريفي الدافئ 🍂',
-      'desc': 'مظهر خريفي بألوان دافئة ونقوش برتقالية مريحة للعين.',
+      'title': 'Warm Autumn Theme 🍂',
+      'desc': 'Warm autumn colors theme!',
       'price': 50,
       'type': 'theme',
     },
     {
       'id': 'theme_rare_icons',
-      'title': 'حزمة الأيقونات الفاخرة 💎',
-      'desc': 'أيقونات إضافية نادرة ومتحركة لتصنيف معاملاتك المالية.',
+      'title': 'Rare Premium Icons 💎',
+      'desc': 'Additional premium icons package!',
       'price': 30,
       'type': 'icons',
     },

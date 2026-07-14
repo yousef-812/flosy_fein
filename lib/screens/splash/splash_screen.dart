@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/onboarding_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../main.dart';
 import '../onboarding/onboarding_screen.dart';
 
@@ -80,6 +81,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final languageProvider = Provider.of<LanguageProvider>(context);
     
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFFBF4DF),
@@ -114,10 +116,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 AnimatedOpacity(
                   opacity: _textOpacity,
                   duration: const Duration(milliseconds: 300),
-                  child: const Text(
-                    'فلوسي فين',
-                    style: TextStyle(
-                      fontFamily: 'Amiri',
+                  child: Text(
+                    languageProvider.translate('app_name'),
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1E88E5),
@@ -129,10 +130,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 AnimatedOpacity(
                   opacity: _textOpacity,
                   duration: const Duration(milliseconds: 300),
-                  child: const Text(
-                    '« سجلني قبل ما تاكلني »',
-                    style: TextStyle(
-                      fontFamily: 'Amiri',
+                  child: Text(
+                    languageProvider.translate('tagline'),
+                    style: const TextStyle(
                       fontSize: 14,
                       fontStyle: FontStyle.italic,
                       color: Colors.grey,

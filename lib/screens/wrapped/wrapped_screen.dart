@@ -83,7 +83,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
     final totalOps = widget.provider.transactions.length;
 
     // Calculate top category
-    String topCategory = languageProvider.isArabic ? 'لا يوجد' : 'None';
+    String topCategory = languageProvider.translate('cat_none');
     double maxCategorySpent = 0;
     final Map<String, double> categorySpent = {};
     for (var tx in widget.provider.transactions) {
@@ -100,7 +100,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
     // Calculate highest spending single transaction
     double highestTxAmount = 0.0;
-    String highestTxTitle = languageProvider.isArabic ? 'لا توجد' : 'None';
+    String highestTxTitle = languageProvider.translate('tx_none');
     for (var tx in widget.provider.transactions) {
       if (tx.isExpense && tx.amount > highestTxAmount) {
         highestTxAmount = tx.amount;
@@ -115,6 +115,10 @@ class _WrappedScreenState extends State<WrappedScreen> {
       const Color(0xFF827717), // Deep Olive Gold
       const Color(0xFF1A237E), // Indigo/Midnight
     ];
+
+    final translatedTopCategory = topCategory == languageProvider.translate('cat_none')
+        ? topCategory
+        : languageProvider.translateCategory(topCategory);
 
     return Scaffold(
       backgroundColor: slideBgColors[_currentSlide],
@@ -172,7 +176,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          topCategory,
+                          translatedTopCategory,
                           style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
                         ),
                         const SizedBox(height: 16),
@@ -233,7 +237,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
                                 style: const TextStyle(color: Colors.white, fontSize: 16),
                               ),
                               Text(
-                                languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', topCategory),
+                                languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', translatedTopCategory),
                                 style: const TextStyle(color: Colors.white, fontSize: 16),
                               ),
                               Text(
@@ -249,7 +253,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
                             HapticHelper.successTap();
                             final shareText = "${languageProvider.translate('wrapped_slide0_title')}\n"
                                 "${languageProvider.translate('wrapped_slide3_item1').replaceFirst('{}', '$totalOps')}\n"
-                                "${languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', topCategory)}\n"
+                                "${languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', translatedTopCategory)}\n"
                                 "${languageProvider.translate('wrapped_slide3_item3').replaceFirst('{}', highestTxTitle)}\n\n"
                                 "Foloosy Fein 💰";
                             Share.share(shareText);

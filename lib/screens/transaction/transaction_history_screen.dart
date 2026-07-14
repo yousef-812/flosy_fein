@@ -1,7 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../models/category_model.dart';
 import '../../widgets/ad_native_widget.dart';
@@ -16,16 +17,16 @@ class TransactionHistoryScreen extends StatefulWidget {
 }
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
-  String _searchQuery = '';
   final _searchController = TextEditingController();
-  int _filterIndex = 0; // 0: All, 1: Expenses, 2: Income
+  String _searchQuery = '';
+  int _filterIndex = 0; // 0 = All, 1 = Expenses, 2 = Income
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Simulate skeleton loading delay for premium feel
-    Future.delayed(const Duration(milliseconds: 700), () {
+    // Simulate minor loading skeleton for premium feel
+    Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -40,21 +41,32 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.dispose();
   }
 
-  // Parse Month names in Arabic
   int? _parseArabicMonth(String query) {
     final months = {
-      'يناير': 1, 'فبراير': 2, 'مارس': 3, 'أبريل': 4, 'مايو': 5, 'يونيو': 6,
-      'يوليو': 7, 'أغسطس': 8, 'سبتمبر': 9, 'أكتوبر': 10, 'نوفمبر': 11, 'ديسمبر': 12
+      'يناير': 1, 'يناير.': 1, 'january': 1, 'jan': 1,
+      'فبراير': 2, 'february': 2, 'feb': 2,
+      'مارس': 3, 'march': 3, 'mar': 3,
+      'أبريل': 4, 'april': 4, 'apr': 4,
+      'مايو': 5, 'may': 5,
+      'يونيو': 6, 'june': 6, 'jun': 6,
+      'يوليو': 7, 'july': 7, 'jul': 7,
+      'أغسطس': 8, 'august': 8, 'aug': 8,
+      'سبتمبر': 9, 'september': 9, 'sep': 9,
+      'أكتوبر': 10, 'october': 10, 'oct': 10,
+      'نوفمبر': 11, 'november': 11, 'nov': 11,
+      'ديسمبر': 12, 'december': 12, 'dec': 12
     };
+
+    final q = query.trim().toLowerCase();
     for (var key in months.keys) {
-      if (key.contains(query) || query.contains(key)) {
+      if (key.contains(q) || q.contains(key)) {
         return months[key];
       }
     }
     return null;
   }
 
-  void _showContextMenu(BuildContext context, TransactionModel tx, TransactionProvider provider) {
+  void _showContextMenu(BuildContext context, TransactionModel tx, TransactionProvider provider, LanguageProvider lp) {
     HapticHelper.mediumTap();
     showModalBottomSheet(
       context: context,
@@ -76,19 +88,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               const Divider(),
               ListTile(
                 leading: const Icon(Icons.copy, color: Colors.blue),
-                title: const Text('نسخ العنوان ماليًا', style: TextStyle(fontFamily: 'Amiri')),
+                title: Text(lp.translate('copy_title_context')),
                 onTap: () {
-                  // Copy to clipboard or copy title
                   Navigator.pop(context);
                   HapticHelper.lightTap();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم نسخ عنوان المعاملة!')),
+                    SnackBar(content: Text(lp.translate('title_copied_success'))),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.repeat, color: Colors.green),
-                title: const Text('كرر العملية اليوم (سريعة)', style: TextStyle(fontFamily: 'Amiri')),
+                title: Text(lp.translate('repeat_tx_today_context')),
                 onTap: () {
                   provider.addTransaction(
                     title: tx.title,
@@ -100,16 +111,23 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   Navigator.pop(context);
                   HapticHelper.successTap();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم تكرار العملية بنجاح اليوم! 🔁', style: TextStyle(fontFamily: 'Amiri'))),
+                    SnackBar(
+                      content: Text(
+                        lp.translate('tx_repeated_success'),
+                      ),
+                    ),
                   );
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('حذف المعاملة', style: TextStyle(fontFamily: 'Amiri', color: Colors.red)),
+                title: Text(
+                  lp.translate('delete_tx_context'),
+                  style: const TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Navigator.pop(context);
-                  _deleteWithUndo(context, tx, provider);
+                  _deleteWithUndo(context, tx, provider, lp);
                 },
               ),
             ],
@@ -119,16 +137,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  void _deleteWithUndo(BuildContext context, TransactionModel tx, TransactionProvider provider) {
+  void _deleteWithUndo(BuildContext context, TransactionModel tx, TransactionProvider provider, LanguageProvider lp) {
     provider.deleteTransaction(tx.id);
     HapticHelper.heavyTap();
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('تم حذف "${tx.title}" 🗑️', style: const TextStyle(fontFamily: 'Amiri')),
+        content: Text(lp.translate('tx_deleted_undo_msg').replaceFirst('{}', tx.title)),
         action: SnackBarAction(
-          label: 'تراجع (Undo)',
+          label: lp.translate('undo_action_label'),
           textColor: Colors.amber,
           onPressed: () {
             provider.undoDelete();
@@ -142,6 +160,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
         final currency = provider.preferredCurrency;
@@ -165,15 +185,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             }
           }
 
-          // 2. Arabic Month filter (e.g. "فبراير")
+          // 2. Month filter (e.g. "فبراير")
           final monthIndex = _parseArabicMonth(_searchQuery);
           if (monthIndex != null) {
             return tx.date.month == monthIndex;
           }
 
-          // 3. Normal Search Matching (Title & Category)
+          // 3. Normal Search Matching (Title & Category & Translated Category)
           final matchesSearch = tx.title.toLowerCase().contains(query) ||
-              tx.categoryName.toLowerCase().contains(query);
+              tx.categoryName.toLowerCase().contains(query) ||
+              languageProvider.translateCategory(tx.categoryName).toLowerCase().contains(query);
           
           return matchesSearch;
         }).toList();
@@ -200,7 +221,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('سجل العمليات المالي', style: TextStyle(fontFamily: 'Amiri')),
+            title: Text(languageProvider.translate('financial_history_title')),
             centerTitle: true,
           ),
           body: Column(
@@ -211,8 +232,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'ابحث عن "أكل" أو اكتب ">500" أو اسم الشهر...',
-                    hintStyle: const TextStyle(fontFamily: 'Amiri', fontSize: 13),
+                    hintText: languageProvider.translate('search_history_hint'),
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -243,17 +263,17 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     FilterChip(
-                      label: const Text('الكل', style: TextStyle(fontFamily: 'Amiri')),
+                      label: Text(languageProvider.translate('all_filter')),
                       selected: _filterIndex == 0,
                       onSelected: (_) => setState(() => _filterIndex = 0),
                     ),
                     FilterChip(
-                      label: const Text('المصاريف', style: TextStyle(fontFamily: 'Amiri', color: Colors.red)),
+                      label: Text(languageProvider.translate('expenses_filter'), style: const TextStyle(color: Colors.red)),
                       selected: _filterIndex == 1,
                       onSelected: (_) => setState(() => _filterIndex = 1),
                     ),
                     FilterChip(
-                      label: const Text('الأرباح والدخل', style: TextStyle(fontFamily: 'Amiri', color: Colors.green)),
+                      label: Text(languageProvider.translate('income_filter'), style: const TextStyle(color: Colors.green)),
                       selected: _filterIndex == 2,
                       onSelected: (_) => setState(() => _filterIndex = 2),
                     ),
@@ -266,10 +286,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 child: _isLoading
                     ? _buildSkeletonList()
                     : itemsWithAds.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text(
-                              'لا توجد معاملات مطابقة للبحث.',
-                              style: TextStyle(fontSize: 16, fontFamily: 'Amiri', color: Colors.grey),
+                              languageProvider.translate('no_matching_txs'),
+                              style: const TextStyle(fontSize: 16, color: Colors.grey),
                             ),
                           )
                         : ListView.builder(
@@ -284,7 +304,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               final tx = item as TransactionModel;
                               final category = CategoryModel.defaultCategories.firstWhere(
                                 (c) => c.name == tx.categoryName,
-                                orElse: () => CategoryModel(name: tx.categoryName, icon: Icons.help, color: Colors.grey),
+                                  orElse: () => CategoryModel(name: tx.categoryName, icon: Icons.help, color: Colors.grey),
                               );
 
                               return Dismissible(
@@ -314,7 +334,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                       categoryName: tx.categoryName,
                                     );
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('تم تكرار "${tx.title}" اليوم! 🔁', style: const TextStyle(fontFamily: 'Amiri'))),
+                                      SnackBar(
+                                        content: Text(
+                                          languageProvider.translate('tx_repeated_today_msg').replaceFirst('{}', tx.title),
+                                        ),
+                                      ),
                                     );
                                     return false; // Don't dismiss item
                                   } else {
@@ -324,7 +348,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                 },
                                 onDismissed: (direction) {
                                   if (direction == DismissDirection.endToStart) {
-                                    _deleteWithUndo(context, tx, provider);
+                                    _deleteWithUndo(context, tx, provider, languageProvider);
                                   }
                                 },
                                 child: Card(
@@ -347,7 +371,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                         fontSize: 16,
                                       ),
                                     ),
-                                    onLongPress: () => _showContextMenu(context, tx, provider),
+                                    onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
                                   ),
                                 ),
                               );

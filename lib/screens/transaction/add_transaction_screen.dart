@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/gamification_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
-import '../../core/utils/ad_helper.dart';
-import '../../core/utils/haptic_helper.dart';
-import '../../core/utils/audio_helper.dart';
 import '../../widgets/digital_receipt_dialog.dart';
+import '../../core/utils/audio_helper.dart';
+import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/ad_helper.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -21,7 +21,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  
   bool _isExpense = true;
   String _selectedCategory = CategoryModel.defaultCategories.first.name;
   DateTime _selectedDate = DateTime.now();
@@ -123,9 +122,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة معاملة تفصيلية', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('add_detailed_transaction')),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -140,8 +141,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 children: [
                   Expanded(
                     child: ChoiceChip(
-                      label: const Center(
-                        child: Text('مصروف (صرف)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+                      label: Center(
+                        child: Text(
+                          languageProvider.translate('expense_label'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                       selected: _isExpense,
                       selectedColor: Colors.red.shade700,
@@ -157,8 +161,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ChoiceChip(
-                      label: const Center(
-                        child: Text('دخل (ربح)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+                      label: Center(
+                        child: Text(
+                          languageProvider.translate('income_label'),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                       ),
                       selected: !_isExpense,
                       selectedColor: Colors.green.shade700,
@@ -182,18 +189,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  labelText: 'المبلغ',
-                  labelStyle: const TextStyle(fontSize: 16, fontFamily: 'Amiri'),
+                  labelText: languageProvider.translate('amount_label'),
+                  labelStyle: const TextStyle(fontSize: 16),
                   hintText: '0.00',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   prefixIcon: const Icon(Icons.calculate_outlined),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'برجاء إدخال المبلغ';
+                    return languageProvider.translate('amount_empty_error');
                   }
                   if (double.tryParse(value.trim()) == null || double.parse(value.trim()) <= 0) {
-                    return 'المبلغ غير صالح';
+                    return languageProvider.translate('amount_invalid_error');
                   }
                   return null;
                 },
@@ -205,14 +212,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 controller: _titleController,
                 style: const TextStyle(fontSize: 18),
                 decoration: InputDecoration(
-                  labelText: 'عنوان المعاملة (مثلا: غداء، راتب)',
-                  labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                  labelText: languageProvider.translate('transaction_title_label'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                   prefixIcon: const Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'برجاء كتابة عنوان للمصروف/الدخل';
+                    return languageProvider.translate('title_empty_error');
                   }
                   return null;
                 },
@@ -220,9 +226,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 24),
 
               // Category Selector Header
-              const Text(
-                'اختر الفئة',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+              Text(
+                languageProvider.translate('select_category_label'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
 
@@ -265,11 +271,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           Icon(cat.icon, color: isSelected ? cat.color : Colors.grey),
                           const SizedBox(height: 6),
                           Text(
-                            cat.name,
+                            languageProvider.translateCategory(cat.name),
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              fontFamily: 'Amiri',
                               color: isSelected ? cat.color : Colors.grey.shade600,
                             ),
                             textAlign: TextAlign.center,
@@ -284,7 +289,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
               // Date Picker Button
               ListTile(
-                title: const Text('التاريخ', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+                title: Text(languageProvider.translate('date_label'), style: const TextStyle(fontSize: 18)),
                 subtitle: Text(
                   '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                   style: const TextStyle(fontSize: 16),
@@ -319,12 +324,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   backgroundColor: _isExpense ? Colors.red.shade700 : Colors.green.shade700,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text(
-                  'حفظ وعرض الإيصال 🧾',
-                  style: TextStyle(
+                child: Text(
+                  languageProvider.translate('save_show_receipt'),
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Amiri',
                     color: Colors.white,
                   ),
                 ),

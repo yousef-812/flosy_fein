@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter/foundation.dart';
 import '../../providers/transaction_provider.dart';
 import '../../models/category_model.dart';
 import '../../widgets/ad_banner_widget.dart';
@@ -21,6 +23,7 @@ import '../shop/streak_shop_screen.dart';
 import 'widgets/financial_pet_widget.dart';
 import '../../widgets/confetti_widget.dart';
 import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/ad_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,6 +34,38 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _showCheckInConfetti = false;
+  InterstitialAd? _interstitialAd;
+  bool _isAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadInterstitialAd() {
+    if (kIsWeb || AdHelper.isPremiumUser) return;
+    InterstitialAd.load(
+      adUnitId: AdHelper.interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _isAdLoaded = true;
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint('Dashboard InterstitialAd failed to load: $error');
+          _isAdLoaded = false;
+        },
+      ),
+    );
+  }
 
   void _triggerCheckInConfetti() {
     setState(() {
@@ -117,11 +152,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   begin: Alignment.topRight,
                                   end: Alignment.bottomLeft,
                                 ),
-                              ),
-                              child: CircleAvatar(
-                                radius: 24,
-                                backgroundColor: isDark ? Colors.black : Colors.white,
-                                child: const Icon(Icons.auto_awesome, color: Colors.amber, size: 24),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -230,16 +260,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             style: const TextStyle(fontSize: 12),
                           ),
                           trailing: ElevatedButton(
-                            onPressed: () async {
-                              final success = await gamification.claimDailyCheckIn();
-                              if (success) {
-                                _triggerCheckInConfetti();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(languageProvider.translate('claim_success')),
-                                    backgroundColor: Colors.amber,
-                                  ),
+                            onPressed: () {
+                              final performClaim = () async {
+                                final success = await gamification.claimDailyCheckIn();
+                                if (success) {
+                                  _triggerCheckInConfetti();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(languageProvider.translate('claim_success')),
+                                      backgroundColor: Colors.amber,
+                                    ),
+                                  );
+                                }
+                              };
+
+                              if (_isAdLoaded && _interstitialAd != null && AdHelper.canShowInterstitial) {
+                                _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+                                  onAdDismissedFullScreenContent: (ad) {
+                                    ad.dispose();
+                                    AdHelper.recordInterstitialShown();
+                                    performClaim();
+                                    _loadInterstitialAd();
+                                  },
+                                  onAdFailedToShowFullScreenContent: (ad, error) {
+                                    ad.dispose();
+                                    performClaim();
+                                    _loadInterstitialAd();
+                                  },
                                 );
+                                _interstitialAd!.show();
+                              } else {
+                                performClaim();
                               }
                             },
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
@@ -270,9 +321,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
                             children: [
-                              const Text(
-                                'الرصيد المتبقي',
-                                style: TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'Amiri'),
+                              Text(
+                                languageProvider.translate('remaining_balance_label'),
+                                style: const TextStyle(fontSize: 16, color: Colors.grey),
                               ),
                               const SizedBox(height: 8),
                               AnimatedCounter(
@@ -284,49 +335,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 suffix: currency,
                               ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Column(
+                              const SizedBox(height: 20),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  const Row(
+                                  Column(
                                     children: [
-                                      Icon(Icons.arrow_downward, color: Colors.green, size: 16),
-                                      SizedBox(width: 4),
-                                      Text('الدخل (الشهر)', style: TextStyle(color: Colors.grey, fontFamily: 'Amiri')),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.arrow_downward, color: Colors.green, size: 16),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            languageProvider.translate('income_month_label'),
+                                            style: const TextStyle(color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        '+${income.toStringAsFixed(2)} $currency',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                                      ),
                                     ],
                                   ),
-                                  Text(
-                                    '+${income.toStringAsFixed(2)} $currency',
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
-                                  ),
-                                ],
-                              ),
-                              Container(height: 30, width: 1, color: Colors.grey.withOpacity(0.3)),
-                              Column(
-                                children: [
-                                  const Row(
+                                  Container(height: 30, width: 1, color: Colors.grey.withOpacity(0.3)),
+                                  Column(
                                     children: [
-                                      Icon(Icons.arrow_upward, color: Colors.red, size: 16),
-                                      SizedBox(width: 4),
-                                      Text('المصاريف', style: TextStyle(color: Colors.grey, fontFamily: 'Amiri')),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.arrow_upward, color: Colors.red, size: 16),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            languageProvider.translate('expenses_label'),
+                                            style: const TextStyle(color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        '-${expenses.toStringAsFixed(2)} $currency',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+                                      ),
                                     ],
                                   ),
-                                  Text(
-                                    '-${expenses.toStringAsFixed(2)} $currency',
-                                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
-                                  ),
                                 ],
-                              ),
+                              )
                             ],
-                          )
-                        ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
                   const SizedBox(height: 16),
 
                   // Premium Feature Access Buttons (Horizontal scroll or Grid)
@@ -334,7 +391,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       _buildQuickFeatureCard(
                         context,
-                        title: 'الميزانيات',
+                        title: languageProvider.translate('budgets'),
                         icon: Icons.pie_chart,
                         color: Colors.purple,
                         screen: const BudgetScreen(),
@@ -342,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 10),
                       _buildQuickFeatureCard(
                         context,
-                        title: 'أهدافي',
+                        title: languageProvider.translate('goals'),
                         icon: Icons.track_changes,
                         color: Colors.orange,
                         screen: const GoalsScreen(),
@@ -350,7 +407,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 10),
                       _buildQuickFeatureCard(
                         context,
-                        title: 'تحدياتي',
+                        title: languageProvider.translate('challenges'),
                         icon: Icons.emoji_events,
                         color: Colors.teal,
                         screen: const ChallengesScreen(),
@@ -362,7 +419,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       _buildQuickFeatureCard(
                         context,
-                        title: 'تقويم الادخار',
+                        title: languageProvider.translate('no_spend'),
                         icon: Icons.calendar_month,
                         color: Colors.green,
                         screen: const NoSpendScreen(),
@@ -370,7 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 10),
                       _buildQuickFeatureCard(
                         context,
-                        title: 'حصاد السنة',
+                        title: languageProvider.translate('wrapped'),
                         icon: Icons.auto_awesome,
                         color: Colors.amber.shade700,
                         screen: WrappedScreen(provider: provider),
@@ -385,9 +442,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Analytics / Chart Section
                   if (categoryExpenses.isNotEmpty) ...[
-                    const Text(
-                      'تحليل مصاريف هذا الشهر',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                    Text(
+                      languageProvider.translate('monthly_analysis'),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Card(
@@ -438,7 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             Container(width: 12, height: 12, decoration: BoxDecoration(color: category.color, shape: BoxShape.circle)),
                             const SizedBox(width: 4),
-                            Text(catName, style: const TextStyle(fontSize: 12, fontFamily: 'Amiri')),
+                            Text(languageProvider.translateCategory(catName), style: const TextStyle(fontSize: 12)),
                           ],
                         );
                       }).toList(),
@@ -487,9 +544,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'آخر المعاملات',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                      Text(
+                        languageProvider.translate('recent_transactions'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       TextButton(
                         onPressed: () {
@@ -499,7 +556,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
                           );
                         },
-                        child: const Text('إضافة تفصيلية ➕', style: TextStyle(fontFamily: 'Amiri')),
+                        child: Text(languageProvider.translate('add_detailed_btn')),
                       ),
                     ],
                   ),
@@ -507,12 +564,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   // Recent Transactions List (At most 3 items)
                   if (provider.transactions.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: Text(
-                        'لا توجد معاملات بعد.',
+                        languageProvider.translate('no_transactions_yet'),
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontFamily: 'Amiri'),
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     )
                   else
@@ -594,7 +651,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 6),
               Text(
                 title,
-                style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13, fontFamily: 'Amiri'),
+                style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13),
               ),
             ],
           ),

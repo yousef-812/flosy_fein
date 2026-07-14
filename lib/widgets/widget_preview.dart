@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
+import '../providers/language_provider.dart';
 
 class WidgetPreview extends StatelessWidget {
   final TransactionProvider provider;
@@ -8,6 +10,7 @@ class WidgetPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     final currency = provider.preferredCurrency;
     final balance = provider.totalBalance;
     
@@ -39,16 +42,15 @@ class WidgetPreview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.savings, color: Colors.blue, size: 18),
-                  SizedBox(width: 6),
+                  const Icon(Icons.savings, color: Colors.blue, size: 18),
+                  const SizedBox(width: 6),
                   Text(
-                    'فلوسي فين',
-                    style: TextStyle(
+                    languageProvider.translate('app_name'),
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      fontFamily: 'Amiri',
                     ),
                   ),
                 ],
@@ -59,9 +61,9 @@ class WidgetPreview extends StatelessWidget {
                   color: Colors.blue.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'ويدجت الهاتف',
-                  style: TextStyle(fontSize: 8, color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                child: Text(
+                  languageProvider.translate('widget_phone_label'),
+                  style: const TextStyle(fontSize: 8, color: Colors.blue, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -69,9 +71,9 @@ class WidgetPreview extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Balance Area
-          const Text(
-            'صافي الميزانية',
-            style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Amiri'),
+          Text(
+            languageProvider.translate('net_budget_label'),
+            style: const TextStyle(fontSize: 10, color: Colors.grey),
           ),
           Text(
             '${balance.toStringAsFixed(2)} $currency',
@@ -85,9 +87,9 @@ class WidgetPreview extends StatelessWidget {
 
           // Last Transaction Mockup
           if (lastTx != null) ...[
-            const Text(
-              'آخر عملية:',
-              style: TextStyle(fontSize: 9, color: Colors.grey, fontFamily: 'Amiri'),
+            Text(
+              languageProvider.translate('last_transaction_label'),
+              style: const TextStyle(fontSize: 9, color: Colors.grey),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -107,9 +109,9 @@ class WidgetPreview extends StatelessWidget {
               ],
             ),
           ] else
-            const Text(
-              'لا توجد عمليات بعد.',
-              style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Amiri'),
+            Text(
+              languageProvider.translate('no_transactions_yet'),
+              style: const TextStyle(fontSize: 10, color: Colors.grey),
             ),
           
           const SizedBox(height: 12),
@@ -124,14 +126,14 @@ class WidgetPreview extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             alignment: Alignment.center,
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.bolt, color: Colors.white, size: 14),
-                SizedBox(width: 4),
+                const Icon(Icons.bolt, color: Colors.white, size: 14),
+                const SizedBox(width: 4),
                 Text(
-                  'إضافة سريعة',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11, fontFamily: 'Amiri'),
+                  languageProvider.translate('widget_quick_add'),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               ],
             ),

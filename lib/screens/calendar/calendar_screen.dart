@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../models/category_model.dart';
 
@@ -17,8 +18,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TransactionProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
     final currency = provider.preferredCurrency;
-    final now = DateTime.now();
 
     // Generate days of the selected month
     final firstDayOfMonth = DateTime(_selectedDate.year, _selectedDate.month, 1);
@@ -46,14 +47,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     }
 
-    final monthNames = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
-    ];
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التقويم المالي', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('financial_calendar')),
         centerTitle: true,
       ),
       body: Column(
@@ -73,8 +69,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   },
                 ),
                 Text(
-                  '${monthNames[_selectedDate.month - 1]} ${_selectedDate.year}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                  '${languageProvider.translate('month_${_selectedDate.month}')} ${_selectedDate.year}',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   icon: const Icon(Icons.arrow_forward_ios),
@@ -89,18 +85,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
 
           // Weekdays Labels
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Text('أحد', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('إثن', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('ثلا', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('أرب', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('خمي', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('جمعة', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                Text('سبت', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_sun'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_mon'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_tue'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_wed'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_thu'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_fri'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                Text(languageProvider.translate('day_sat'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
               ],
             ),
           ),
@@ -202,8 +198,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'تفاصيل يوم: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Amiri'),
+                  languageProvider.translate('day_details')
+                      .replaceFirst('{}', '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Row(
                   children: [
@@ -227,10 +224,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           // Transactions list for Selected Day
           Expanded(
             child: selectedDayTxs.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
-                      'لا توجد عمليات مسجلة في هذا اليوم.',
-                      style: TextStyle(color: Colors.grey, fontFamily: 'Amiri'),
+                      languageProvider.translate('no_transactions_today'),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   )
                 : ListView.builder(

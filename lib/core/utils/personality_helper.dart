@@ -2,6 +2,21 @@ import 'dart:math';
 import '../../models/transaction_model.dart';
 
 class PersonalityHelper {
+  static String _getTranslatedCategory(String cat, bool isAr) {
+    if (isAr) return cat;
+    switch (cat) {
+      case 'طعام وشراب': return 'Food & Drinks';
+      case 'مواصلات': return 'Transport';
+      case 'تسوق': return 'Shopping';
+      case 'سكن وفواتير': return 'Housing & Bills';
+      case 'صحة وعلاج': return 'Health & Medical';
+      case 'ترفيه وسفر': return 'Entertainment & Travel';
+      case 'تعليم': return 'Education';
+      case 'أخرى': return 'Other';
+      default: return cat;
+    }
+  }
+
   // 1. Get Funny Quotes from "Foloos"
   static String getFunnyQuote(List<TransactionModel> transactions, [String langCode = 'ar']) {
     final isAr = langCode == 'ar';
@@ -51,9 +66,9 @@ class PersonalityHelper {
     for (var tx in currentMonthTxs) {
       if (tx.isExpense) {
         totalExpense += tx.amount;
-        if (tx.categoryName == 'طعام وشراب' || tx.categoryName == 'Food & Drinks') {
+        if (tx.categoryName == 'طعام وشراب') {
           foodSpent += tx.amount;
-        } else if (tx.categoryName == 'تسوق' || tx.categoryName == 'Shopping') {
+        } else if (tx.categoryName == 'تسوق') {
           shoppingSpent += tx.amount;
         }
       }
@@ -165,9 +180,10 @@ class PersonalityHelper {
 
       if (topCategory.isNotEmpty && totalMonthExpenses > 0) {
         final percent = (maxAmount / totalMonthExpenses) * 100;
+        final displayCat = _getTranslatedCategory(topCategory, isAr);
         insights.add(isAr
-            ? "☕ أكتر فئة صرفت عليها الشهر ده هي '$topCategory' بنسبة ${percent.toStringAsFixed(0)}% من إجمالي مصاريفك."
-            : "☕ Your highest spending category this month is '$topCategory' making up ${percent.toStringAsFixed(0)}% of total expenses.");
+            ? "☕ أكتر فئة صرفت عليها الشهر ده هي '$displayCat' بنسبة ${percent.toStringAsFixed(0)}% من إجمالي مصاريفك."
+            : "☕ Your highest spending category this month is '$displayCat' making up ${percent.toStringAsFixed(0)}% of total expenses.");
       }
     }
 

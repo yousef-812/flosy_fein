@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/challenge_model.dart';
 import '../../core/utils/haptic_helper.dart';
 
@@ -14,9 +15,11 @@ class ChallengesScreen extends StatefulWidget {
 class _ChallengesScreenState extends State<ChallengesScreen> {
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تحديات التوفير 💸', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('challenges_title')),
         centerTitle: true,
         actions: [
           IconButton(
@@ -25,8 +28,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               Provider.of<TransactionProvider>(context, listen: false).resetChallenges();
               HapticHelper.mediumTap();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('تمت إعادة تهيئة التحديات بنجاح!', style: TextStyle(fontFamily: 'Amiri')),
+                SnackBar(
+                  content: Text(languageProvider.translate('challenges_reset_success')),
                 ),
               );
             },
@@ -38,10 +41,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           final challenges = provider.challenges;
 
           if (challenges.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'لا توجد تحديات حالياً.',
-                style: TextStyle(fontFamily: 'Amiri', fontSize: 16, color: Colors.grey),
+                languageProvider.translate('no_challenges_now'),
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
             );
           }
@@ -74,18 +77,21 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
               }
 
               Color statusColor = Colors.blue;
-              String statusText = 'جاري التحدي ⏳';
+              String statusText = languageProvider.translate('challenge_status_ongoing');
               IconData statusIcon = Icons.hourglass_empty;
 
               if (ch.isCompleted) {
                 statusColor = Colors.green;
-                statusText = 'ناجح 🏆';
+                statusText = languageProvider.translate('challenge_status_completed');
                 statusIcon = Icons.stars;
               } else if (ch.isFailed) {
                 statusColor = Colors.red;
-                statusText = 'فشل 💔';
+                statusText = languageProvider.translate('challenge_status_failed');
                 statusIcon = Icons.cancel;
               }
+
+              final displayTitle = languageProvider.translate('${ch.id}_title');
+              final displayDesc = languageProvider.translate('${ch.id}_desc');
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 16.0),
@@ -103,11 +109,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              ch.title,
+                              displayTitle,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Amiri',
                               ),
                             ),
                           ),
@@ -118,7 +123,6 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                fontFamily: 'Amiri',
                               ),
                             ),
                             backgroundColor: statusColor,
@@ -128,8 +132,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        ch.description,
-                        style: const TextStyle(fontSize: 14, color: Colors.grey, fontFamily: 'Amiri'),
+                        displayDesc,
+                        style: const TextStyle(fontSize: 14, color: Colors.grey),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -141,11 +145,13 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 ch.isCompleted
-                                    ? 'أحسنت! وفرت فلوسك بنجاح 🎉'
+                                    ? languageProvider.translate('saving_goal_great')
                                     : ch.isFailed
-                                        ? 'حظاً أوفر المرة القادمة! 🥺'
-                                        : 'متبقي: $daysLeft يوم من أصل ${ch.durationDays}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                                        ? languageProvider.translate('challenge_failed_msg')
+                                        : languageProvider.translate('challenge_days_left')
+                                            .replaceFirst('{}', '$daysLeft')
+                                            .replaceFirst('{}', '${ch.durationDays}'),
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -159,8 +165,8 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                                 });
                                 HapticHelper.successTap();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('🎉 مبروك! لقد نجحت في التحدي ووفرت فلوسك!', style: TextStyle(fontFamily: 'Amiri')),
+                                  SnackBar(
+                                    content: Text(languageProvider.translate('challenge_success_snackbar')),
                                     backgroundColor: Colors.green,
                                   ),
                                 );
@@ -171,7 +177,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text('تحقق الآن', style: TextStyle(fontFamily: 'Amiri', fontSize: 12)),
+                              child: Text(
+                                languageProvider.translate('verify_challenge_btn'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
                             ),
                         ],
                       ),

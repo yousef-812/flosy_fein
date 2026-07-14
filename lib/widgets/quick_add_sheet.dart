@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/transaction_provider.dart';
 import '../providers/gamification_provider.dart';
+import '../providers/language_provider.dart';
 import '../models/category_model.dart';
 import '../core/utils/haptic_helper.dart';
 import '../core/utils/audio_helper.dart';
@@ -26,7 +27,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     super.dispose();
   }
 
-  void _parseInput(String input) {
+  void _parseInput(String input, LanguageProvider lp) {
     if (input.trim().isEmpty) {
       setState(() {
         _parsedTitle = '';
@@ -51,7 +52,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     title = title.replaceAll(RegExp(r'\s+'), ' '); // Clean double spaces
 
     if (title.isEmpty) {
-      title = 'مصروف سريع';
+      title = lp.translate('quick_expense_default');
     }
 
     // Simple Smart Category & Income Classification
@@ -60,23 +61,23 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
 
     final text = title.toLowerCase();
     
-    if (text.contains('راتب') || text.contains('قبض') || text.contains('دخل') || text.contains('ربح') || text.contains('جاني')) {
+    if (text.contains('راتب') || text.contains('قبض') || text.contains('دخل') || text.contains('ربح') || text.contains('جاني') || text.contains('salary') || text.contains('income')) {
       isExpense = false;
     }
 
-    if (text.contains('أكل') || text.contains('اكل') || text.contains('غداء') || text.contains('عشاء') || text.contains('فطور') || text.contains('مطعم') || text.contains('قهوة') || text.contains('شاي') || text.contains('كافيه')) {
+    if (text.contains('أكل') || text.contains('اكل') || text.contains('غداء') || text.contains('عشاء') || text.contains('فطور') || text.contains('مطعم') || text.contains('قهوة') || text.contains('شاي') || text.contains('كافيه') || text.contains('food') || text.contains('cafe') || text.contains('coffee')) {
       category = 'طعام وشراب';
-    } else if (text.contains('مواصلات') || text.contains('بنزين') || text.contains('أوبر') || text.contains('اوبر') || text.contains('تاكسي') || text.contains('تكس') || text.contains('سيارة') || text.contains('عربية') || text.contains('مترو')) {
+    } else if (text.contains('مواصلات') || text.contains('بنزين') || text.contains('أوبر') || text.contains('اوبر') || text.contains('تاكسي') || text.contains('تكس') || text.contains('سيارة') || text.contains('عربية') || text.contains('مترو') || text.contains('transport') || text.contains('car') || text.contains('uber')) {
       category = 'مواصلات';
-    } else if (text.contains('شراء') || text.contains('لبس') || text.contains('هدوم') || text.contains('تسوق') || text.contains('سوبرماركت') || text.contains('طلب الطلبات')) {
+    } else if (text.contains('شراء') || text.contains('لبس') || text.contains('هدوم') || text.contains('تسوق') || text.contains('سوبرماركت') || text.contains('طلب الطلبات') || text.contains('shopping') || text.contains('buy')) {
       category = 'تسوق';
-    } else if (text.contains('فاتورة') || text.contains('فواتير') || text.contains('كهرباء') || text.contains('مياه') || text.contains('إيجار') || text.contains('نت') || text.contains('انترنت')) {
+    } else if (text.contains('فاتورة') || text.contains('فواتير') || text.contains('كهرباء') || text.contains('مياه') || text.contains('إيجار') || text.contains('نت') || text.contains('انترنت') || text.contains('bill') || text.contains('rent') || text.contains('internet')) {
       category = 'سكن وفواتير';
-    } else if (text.contains('دواء') || text.contains('علاج') || text.contains('صيدلية') || text.contains('طبيب') || text.contains('دكتور') || text.contains('كشف')) {
+    } else if (text.contains('دواء') || text.contains('علاج') || text.contains('صيدلية') || text.contains('طبيب') || text.contains('دكتور') || text.contains('كشف') || text.contains('medical') || text.contains('doctor') || text.contains('pharmacy')) {
       category = 'صحة وعلاج';
-    } else if (text.contains('رحلة') || text.contains('سفر') || text.contains('سينما') || text.contains('خروج') || text.contains('فسحة')) {
+    } else if (text.contains('رحلة') || text.contains('سفر') || text.contains('سينما') || text.contains('خروج') || text.contains('فسحة') || text.contains('travel') || text.contains('cinema') || text.contains('fun')) {
       category = 'ترفيه وسفر';
-    } else if (text.contains('مدرسة') || text.contains('كتاب') || text.contains('تعليم') || text.contains('جامعة') || text.contains('درس') || text.contains('كورس')) {
+    } else if (text.contains('مدرسة') || text.contains('كتاب') || text.contains('تعليم') || text.contains('جامعة') || text.contains('درس') || text.contains('كورس') || text.contains('school') || text.contains('book') || text.contains('study') || text.contains('course')) {
       category = 'تعليم';
     }
 
@@ -91,7 +92,11 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   void _submit() {
     if (_parsedAmount <= 0) return;
 
-    Provider.of<TransactionProvider>(context, listen: false).addTransaction(
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+    final languageProvider = Provider.of<LanguageProvider>(context, listen: false);
+    final currency = provider.preferredCurrency;
+
+    provider.addTransaction(
       title: _parsedTitle,
       amount: _parsedAmount,
       date: DateTime.now(),
@@ -109,8 +114,9 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '💰 "سجلتها... متقلقش! تم حفظ $_parsedTitle بقيمة $_parsedAmount"',
-          style: const TextStyle(fontFamily: 'Amiri'),
+          languageProvider.translate('quick_add_success')
+              .replaceFirst('{}', _parsedTitle)
+              .replaceFirst('{}', '$_parsedAmount $currency'),
         ),
         backgroundColor: Colors.green,
       ),
@@ -120,6 +126,7 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TransactionProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
     final currency = provider.preferredCurrency;
 
     return Padding(
@@ -133,28 +140,27 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'إضافة سريعة بنقرة واحدة ⚡',
+          Text(
+            languageProvider.translate('quick_add_sheet_title'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'اكتب مثلاً: "120 قهوة" أو "350 بنزين" أو "6000 راتب"',
+          Text(
+            languageProvider.translate('quick_add_sheet_subtitle'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Amiri'),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _inputController,
             autofocus: true,
             decoration: InputDecoration(
-              hintText: 'اكتب هنا...',
-              hintStyle: const TextStyle(fontFamily: 'Amiri'),
+              hintText: languageProvider.translate('type_here_hint'),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
               prefixIcon: const Icon(Icons.bolt, color: Colors.amber),
             ),
-            onChanged: _parseInput,
+            onChanged: (value) => _parseInput(value, languageProvider),
           ),
           const SizedBox(height: 16),
           
@@ -177,15 +183,15 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'العنوان المكتشف: $_parsedTitle',
+                          languageProvider.translate('detected_title').replaceFirst('{}', _parsedTitle),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Text('الفئة المقترحة: '),
+                            Text(languageProvider.translate('suggested_category_label')),
                             Chip(
-                              label: Text(_suggestedCategory, style: const TextStyle(fontSize: 12, fontFamily: 'Amiri')),
+                              label: Text(languageProvider.translateCategory(_suggestedCategory), style: const TextStyle(fontSize: 12)),
                               padding: EdgeInsets.zero,
                               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             )
@@ -214,10 +220,9 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
               disabledBackgroundColor: Colors.grey.withOpacity(0.2),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
-            child: const Text(
-              'حفظ المعاملة السريعة',
-              style: TextStyle(
-                fontFamily: 'Amiri',
+            child: Text(
+              languageProvider.translate('save_quick_transaction'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
