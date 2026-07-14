@@ -40,7 +40,23 @@ class TransactionProvider extends ChangeNotifier {
   void _loadData() {
     _transactions = _transactionBox.values.toList();
     _transactions.sort((a, b) => b.date.compareTo(a.date)); // Newest first
-    _budgets = _budgetBox.values.toList();
+    
+    // Recalculate budgets spent amount dynamically for the current month!
+    final now = DateTime.now();
+    _budgets = _budgetBox.values.toList().map((budget) {
+      double spent = 0;
+      for (var tx in _transactions) {
+        if (tx.isExpense &&
+            tx.categoryName == budget.categoryName &&
+            tx.date.month == now.month &&
+            tx.date.year == now.year) {
+          spent += tx.amount;
+        }
+      }
+      budget.spentAmount = spent;
+      return budget;
+    }).toList();
+
     _goals = _goalsBox.values.toList();
     _challenges = _challengesBox.values.toList();
     notifyListeners();
