@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
 import '../../core/utils/haptic_helper.dart';
 
@@ -75,11 +77,12 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     final currency = widget.provider.preferredCurrency;
     final totalOps = widget.provider.transactions.length;
 
     // Calculate top category
-    String topCategory = 'لا يوجد';
+    String topCategory = languageProvider.isArabic ? 'لا يوجد' : 'None';
     double maxCategorySpent = 0;
     final Map<String, double> categorySpent = {};
     for (var tx in widget.provider.transactions) {
@@ -96,7 +99,7 @@ class _WrappedScreenState extends State<WrappedScreen> {
 
     // Calculate highest spending single transaction
     double highestTxAmount = 0.0;
-    String highestTxTitle = 'لا توجد';
+    String highestTxTitle = languageProvider.isArabic ? 'لا توجد' : 'None';
     for (var tx in widget.provider.transactions) {
       if (tx.isExpense && tx.amount > highestTxAmount) {
         highestTxAmount = tx.amount;
@@ -136,77 +139,81 @@ class _WrappedScreenState extends State<WrappedScreen> {
                       if (_currentSlide == 0) ...[
                         const Icon(Icons.slideshow, size: 80, color: Colors.white),
                         const SizedBox(height: 24),
-                        const Text(
-                          'حصادك المالي 2026',
+                        Text(
+                          languageProvider.translate('wrapped_slide0_title'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'قمت بتسجيل عمليات ومتابعة أموالك بدقة كبيرة!',
+                        Text(
+                          languageProvider.translate('wrapped_slide0_desc'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                         const SizedBox(height: 32),
                         Text(
-                          'إجمالي العمليات: $totalOps',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amberAccent, fontFamily: 'Amiri'),
+                          languageProvider.translate('wrapped_slide0_ops').replaceFirst('{}', '$totalOps'),
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amberAccent),
                         ),
                       ] else if (_currentSlide == 1) ...[
                         const Icon(Icons.shopping_bag, size: 80, color: Colors.cyanAccent),
                         const SizedBox(height: 24),
-                        const Text(
-                          'العدو الأكبر لمحفظتك',
+                        Text(
+                          languageProvider.translate('wrapped_slide1_title'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'أكثر فئة قمت بالصرف عليها هذا العام هي:',
+                        Text(
+                          languageProvider.translate('wrapped_slide1_desc'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                         const SizedBox(height: 24),
                         Text(
                           topCategory,
-                          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.cyanAccent, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.cyanAccent),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'بمجموع مصروفات بلغ: ${maxCategorySpent.toStringAsFixed(2)} $currency',
-                          style: const TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'Amiri'),
+                          languageProvider.translate('wrapped_slide1_spent')
+                              .replaceFirst('{}', maxCategorySpent.toStringAsFixed(2))
+                              .replaceFirst('{}', currency),
+                          style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                       ] else if (_currentSlide == 2) ...[
                         const Icon(Icons.money_off, size: 80, color: Colors.amberAccent),
                         const SizedBox(height: 24),
-                        const Text(
-                          'أكبر ضربة مالية!',
+                        Text(
+                          languageProvider.translate('wrapped_slide2_title'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'أكبر عملية مصروف قمت بتسجيلها كانت:',
+                        Text(
+                          languageProvider.translate('wrapped_slide2_desc'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.white70, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 16, color: Colors.white70),
                         ),
                         const SizedBox(height: 24),
                         Text(
                           highestTxTitle,
-                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.amberAccent, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.amberAccent),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'بقيمة: ${highestTxAmount.toStringAsFixed(2)} $currency',
+                          languageProvider.translate('wrapped_slide2_val')
+                              .replaceFirst('{}', highestTxAmount.toStringAsFixed(2))
+                              .replaceFirst('{}', currency),
                           style: const TextStyle(fontSize: 20, color: Colors.white70, fontWeight: FontWeight.bold),
                         ),
                       ] else if (_currentSlide == 3) ...[
                         const Icon(Icons.emoji_events, size: 80, color: Colors.amberAccent),
                         const SizedBox(height: 24),
-                        const Text(
-                          'بطاقة مشاركة الحصاد',
+                        Text(
+                          languageProvider.translate('wrapped_slide3_title'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Amiri'),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                         const SizedBox(height: 24),
                         Container(
@@ -218,11 +225,20 @@ class _WrappedScreenState extends State<WrappedScreen> {
                           ),
                           child: Column(
                             children: [
-                              const Text('فلوسي فين - 2026', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+                              Text('${languageProvider.translate("app_name")} - 2026', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
                               const SizedBox(height: 12),
-                              Text('• سجلت: $totalOps عملية مالية', style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Amiri')),
-                              Text('• الفئة الأولى: $topCategory', style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Amiri')),
-                              Text('• أكبر عملية: $highestTxTitle', style: const TextStyle(color: Colors.white, fontSize: 16, fontFamily: 'Amiri')),
+                              Text(
+                                languageProvider.translate('wrapped_slide3_item1').replaceFirst('{}', '$totalOps'),
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                              Text(
+                                languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', topCategory),
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
+                              Text(
+                                languageProvider.translate('wrapped_slide3_item3').replaceFirst('{}', highestTxTitle),
+                                style: const TextStyle(color: Colors.white, fontSize: 16),
+                              ),
                             ],
                           ),
                         ),
@@ -231,11 +247,11 @@ class _WrappedScreenState extends State<WrappedScreen> {
                           onPressed: () {
                             HapticHelper.successTap();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('جاري حفظ ومشاركة الحصاد...')),
+                              SnackBar(content: Text(languageProvider.translate('saving_wrapped'))),
                             );
                           },
                           icon: const Icon(Icons.ios_share),
-                          label: const Text('مشاركة الحصاد', style: TextStyle(fontFamily: 'Amiri')),
+                          label: Text(languageProvider.translate('share_wrapped')),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.amber,
                             foregroundColor: Colors.black,

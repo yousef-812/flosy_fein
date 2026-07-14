@@ -1,16 +1,21 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageProvider extends ChangeNotifier {
   String _currentLanguage = 'ar';
-
-  LanguageProvider() {
-    _loadLanguage();
-  }
+  Map<String, String> _localizedStrings = {};
 
   String get currentLanguage => _currentLanguage;
   bool get isArabic => _currentLanguage == 'ar';
+
+  /// Initialize language and load translations from external JSON files
+  Future<void> init() async {
+    await _loadLanguage();
+    await _loadTranslations();
+  }
 
   Future<void> _loadLanguage() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,296 +37,33 @@ class LanguageProvider extends ChangeNotifier {
         _currentLanguage = 'ar';
       }
     }
-    notifyListeners();
+  }
+
+  Future<void> _loadTranslations() async {
+    try {
+      final jsonString = await rootBundle.loadString('assets/lang/$_currentLanguage.json');
+      final Map<String, dynamic> jsonMap = json.decode(jsonString);
+      _localizedStrings = jsonMap.map((key, value) => MapEntry(key, value.toString()));
+    } catch (e) {
+      debugPrint("Error loading translations for $_currentLanguage: $e");
+      // Fallback/Stub in case asset is not loaded yet (e.g. during tests or initial layout)
+      _localizedStrings = {};
+    }
   }
 
   Future<void> changeLanguage(String langCode) async {
     if (langCode != 'ar' && langCode != 'en') return;
     _currentLanguage = langCode;
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('app_language', langCode);
+    
+    await _loadTranslations();
     notifyListeners();
   }
 
-  // Translation lookups
+  /// Translation lookups
   String translate(String key) {
-    return _localizedValues[_currentLanguage]?[key] ?? key;
+    return _localizedStrings[key] ?? key;
   }
-
-  static const Map<String, Map<String, String>> _localizedValues = {
-    'ar': {
-      'app_name': 'فلوسي فين',
-      'tagline': '« سجلني قبل ما تاكلني »',
-      'home': 'الرئيسية',
-      'calendar_nav': 'التقويم',
-      'history_nav': 'السجل',
-      'monthly_story': 'قصتي الشهرية',
-      'daily_checkin_title': 'مكافأة تسجيل الدخول اليومي! 🎉',
-      'daily_checkin_desc': 'احصل على 10 عملات مجانية لمجرد فتح التطبيق اليوم.',
-      'claim': 'استلام',
-      'claim_success': '🎉 تم استلام 10 عملات مجانية بنجاح!',
-      'net_balance': 'صافي الرصيد الحالي',
-      'income_this_month': 'إجمالي الدخل هذا الشهر',
-      'expenses_this_month': 'إجمالي المصاريف هذا الشهر',
-      'budgets': 'الميزانيات',
-      'goals': 'أهدافي',
-      'challenges': 'تحدياتي',
-      'no_spend': 'تقويم الادخار',
-      'wrapped': 'حصاد السنة',
-      'activity_map': 'خريطة نشاط الصرف',
-      'monthly_analysis': 'تحليل مصاريف هذا الشهر',
-      'empty_state_msg': 'لسه مفيش مصاريف متسجلة خالص!\nفلوسك في أمان لحد دلوقتي.',
-      'empty_state_btn': 'سجل أول عملية الآن',
-      'quick_add_title': 'إدخال سريع',
-      'quick_add_hint': 'اكتب هنا (مثال: 50 مواصلات)',
-      'expense': 'صرف',
-      'income': 'دخل',
-      'suggested_category': 'تصنيف مقترح:',
-      'save_confirm': 'تأكيد الحفظ',
-      'quick_add_success': '💰 "سجلتها... متقلقش! تم حفظ {} بقيمة {}"',
-      'receipt_id': 'رقم الإيصال:',
-      'date': 'التاريخ:',
-      'time': 'التوقيت:',
-      'transaction_type': 'نوع العملية:',
-      'category': 'الفئة التابعة:',
-      'total_amount': 'القيمة الإجمالية',
-      'share_receipt': 'مشاركة الإيصال',
-      'close': 'إغلاق',
-      'sharing_receipt': 'جاري تصدير الإيصال ومشاركته...',
-      'financial_flow': 'تفاصيل التدفق المالي',
-      'financial_forecast': 'التوقعات المالية',
-      'no_forecast': 'لا توجد توقعات حالية لعدم وجود مصاريف كافية.',
-      'forecast_warning': 'بمعدل صرفك الحالي ({} {}/يوم)، رصيدك هينفد يوم: {} (بعد {} يوم).',
-      'forecast_empty': 'لقد نفد رصيدك بالفعل! الرجاء تقليل المصاريف أو تسجيل دخل جديد لتفادي الديون.',
-      'total_income_label': 'إجمالي الدخل',
-      'total_expenses_label': 'إجمالي المصروفات',
-      'settings': 'الإعدادات',
-      'app_version': 'تطبيق فلوسي فين - النسخة 1.1.0',
-      'reset_onboarding': 'بدء الترحيب والتهيئة من جديد',
-      'general_preferences': 'التفضيلات العامة',
-      'dark_mode': 'الوضع الداكن (Dark Mode)',
-      'interactive_sounds': 'الأصوات التفاعلية (Cash Sound)',
-      'preferred_currency': 'العملة المفضلة',
-      'widget_preview_title': 'معاينة ويدجت الشاشة الرئيسية',
-      'app_language': 'لغة التطبيق',
-      'no_spend_title': 'تقويم أيام الادخار',
-      'current_streak': 'السلسلة الحالية',
-      'longest_streak': 'أطول سلسلة ادخار',
-      'days': 'أيام',
-      'calendar_legend': 'أيام الشهر الحالي (الأخضر = بلا صرف | الأحمر = صرف)',
-      'wrapped_slide0_title': 'حصادك المالي 2026',
-      'wrapped_slide0_desc': 'قمت بتسجيل عمليات ومتابعة أموالك بدقة كبيرة!',
-      'wrapped_slide0_ops': 'إجمالي العمليات: {}',
-      'wrapped_slide1_title': 'العدو الأكبر لمحفظتك',
-      'wrapped_slide1_desc': 'أكثر فئة قمت بالصرف عليها هذا العام هي:',
-      'wrapped_slide1_spent': 'بمجموع مصروفات بلغ: {} {}',
-      'wrapped_slide2_title': 'أكبر ضربة مالية!',
-      'wrapped_slide2_desc': 'أكبر عملية مصروف قمت بتسجيلها كانت:',
-      'wrapped_slide2_val': 'بقيمة: {} {}',
-      'wrapped_slide3_title': 'بطاقة مشاركة الحصاد',
-      'wrapped_slide3_item1': '• سجلت: {} عملية مالية',
-      'wrapped_slide3_item2': '• الفئة الأولى: {}',
-      'wrapped_slide3_item3': '• أكبر عملية: {}',
-      'share_wrapped': 'مشاركة الحصاد',
-      'saving_wrapped': 'جاري حفظ ومشاركة الحصاد...',
-      'streak_shop': 'متجر التوفير والسلاسل',
-      'your_coins': 'رصيد عملاتك الحالي',
-      'shop_tip': 'وفر أكتر.. تسجل دخول يومي.. تجمع عملات أكتر! 😉',
-      'buy_now': 'شراء الآن',
-      'activate_theme': 'تفعيل السمة',
-      'unlocked': 'مفتوح',
-      'active_now': 'مفعّل حالياً',
-      'theme_gold_title': 'السمة الذهبية الملكية 👑',
-      'theme_gold_desc': 'مظهر ذهبي مشع يعطي التطبيق هيبة الملوك والثراء الفاحش!',
-      'theme_autumn_title': 'المظهر الخريفي الدافئ 🍂',
-      'theme_autumn_desc': 'مظهر خريفي بألوان دافئة ونقوش برتقالية مريحة للعين.',
-      'theme_rare_icons_title': 'حزمة الأيقونات الفاخرة 💎',
-      'theme_rare_icons_desc': 'أيقونات إضافية نادرة ومتحركة لتصنيف معاملاتك المالية.',
-      'buy_success': '🎉 مبروك! لقد اشتريت "{}" بنجاح!',
-      'buy_fail': 'رصيد عملاتك لا يكفي لإتمام عملية الشراء! 🥺',
-      'pet_name': 'الحصالة "فلوس" 💰',
-      'pet_mood_normal': 'متزن وواعي! 🙂',
-      'pet_comment_normal': 'مستقرين لحد دلوقتي.. بس متغفلنيش وسجل أول بأول! 😉',
-      'pet_mood_fed': 'ممتن وشبعان! 🥰',
-      'pet_comment_fed': 'يا سلام يا فنان.. طعامك طعمه دهب! كرشي بيشكرك! 🥰',
-      'pet_mood_overrun': 'بيعيط على الفلوس! 😢',
-      'pet_comment_overrun': 'يا لهوي! الميزانية طارت في الهواء يا فخر العرب! 😢💸',
-      'pet_mood_warning': 'قلقان على محفظتك! 😟',
-      'pet_comment_warning': 'بقولك إيه.. إحنا داخلين على منعطف خطر، اربط الحزام! 😟',
-      'pet_mood_negative': 'تحت الصفر! 🥶',
-      'pet_comment_negative': 'تحت الصفر؟ 🥶 كدا إحنا محتاجين معجزة مالية أو تقليل مصاريف فوري!',
-      'pet_mood_gold': 'سعيد وفخور بمدخراتك! 👑',
-      'pet_comment_gold': 'يا سلام يا فنان.. القرش الأبيض بينفع في اليوم الأسود! 👑🏆',
-      'feed_btn': 'أكله بـ 10 عملات',
-      'feed_success_msg': '🐷: هممم! طعمها حلو أوي، تسلم إيدك! 🥰 (+ حب)',
-      'feed_fail_msg': 'معندكش عملات كافية لتأكيل الحصالة! 🥺 (مطلوب 10 عملات)',
-      'coins_balance_label': 'رصيد عملاتك: ',
-      'currency_egp': 'ج.م',
-      'currency_sar': 'ر.س',
-      'currency_aed': 'د.إ',
-      'currency_kwd': 'د.ك',
-      'currency_jod': 'د.أ',
-      'currency_sdg': 'ج.س',
-      'currency_usd': 'دولار',
-      'premium_title': 'العضوية الذهبية (Premium)',
-      'premium_body_active': 'أنت عضو ذهبي الآن! تم إيقاف جميع الإعلانات مدى الحياة! 🏆',
-      'premium_body_inactive': 'تخلص من الإعلانات البينية والبنرات المزعجة بلمسة واحدة مدى الحياة.',
-      'premium_upgrade_btn': 'ترقية للنسخة الذهبية',
-      'premium_upgrade_alert': 'احصل على تجربة خالية تماماً من الإعلانات لدعم استمرار التطبيق بلمسة واحدة!',
-      'premium_upgrade_alert_btn': 'شراء النسخة الذهبية 🚀',
-      'premium_success_msg': 'مبروك! تم تفعيل النسخة الذهبية وإزالة الإعلانات بنجاح! 🏆',
-      'premium_buy_mock': 'شراء الآن (محاكاة)',
-      'cancel': 'إلغاء',
-      'onboarding_currency_title': 'ما هي عملتك المفضلة؟',
-      'onboarding_theme_title': 'بتفضل مظهر التطبيق إيه؟',
-      'onboarding_light_mode': 'وضع فاتح\nLight Mode',
-      'onboarding_dark_mode': 'وضع داكن\nDark Mode',
-      'onboarding_goal_title': 'ما هو هدفك المالي الأساسي؟',
-      'next': 'التالي',
-      'previous': 'السابق',
-      'finish': 'إنهاء',
-      'start_journey': 'ابدأ الآن',
-      'saving_goal_completed': 'تم تحقيق هدف الادخار بنجاح! 🏆',
-      'saving_goal_great': 'أحسنت! وفرت فلوسك بنجاح 🎉',
-      'challenge_completed_msg': 'تهانينا! لقد نجحت في إتمام تحدي التوفير بنجاح! 🥳',
-      'record_saved_successfully': 'تم حفظ المعاملة بنجاح! 💸',
-    },
-    'en': {
-      'app_name': 'Foloosy Fein',
-      'tagline': '« Track me before you eat me »',
-      'home': 'Home',
-      'calendar_nav': 'Calendar',
-      'history_nav': 'History',
-      'monthly_story': 'Monthly Story',
-      'daily_checkin_title': 'Daily Check-in Reward! 🎉',
-      'daily_checkin_desc': 'Get 10 free coins just for opening the app today.',
-      'claim': 'Claim',
-      'claim_success': '🎉 10 free coins claimed successfully!',
-      'net_balance': 'Net Current Balance',
-      'income_this_month': 'Income This Month',
-      'expenses_this_month': 'Expenses This Month',
-      'budgets': 'Budgets',
-      'goals': 'Goals',
-      'challenges': 'Challenges',
-      'no_spend': 'No-Spend',
-      'wrapped': 'Year Wrapped',
-      'activity_map': 'Spending Activity Map',
-      'monthly_analysis': 'This Month Analysis',
-      'empty_state_msg': 'No expenses recorded yet!\nYour money is safe for now.',
-      'empty_state_btn': 'Record First Transaction Now',
-      'quick_add_title': 'Quick Add',
-      'quick_add_hint': 'Type here (e.g. 50 transport)',
-      'expense': 'Expense',
-      'income': 'Income',
-      'suggested_category': 'Suggested Category:',
-      'save_confirm': 'Save',
-      'quick_add_success': '💰 "Saved... don\'t worry! Recorded {} of value {}"',
-      'receipt_id': 'Receipt ID:',
-      'date': 'Date:',
-      'time': 'Time:',
-      'transaction_type': 'Type:',
-      'category': 'Category:',
-      'total_amount': 'Total Amount',
-      'share_receipt': 'Share Receipt',
-      'close': 'Close',
-      'sharing_receipt': 'Exporting and sharing receipt...',
-      'financial_flow': 'Financial Flow Details',
-      'financial_forecast': 'Financial Forecast',
-      'no_forecast': 'No forecast available due to lack of expenses.',
-      'forecast_warning': 'At your current spending rate ({} {}/day), your balance will run out on: {} (after {} days).',
-      'forecast_empty': 'Your balance has already run out! Please reduce spending or record new income.',
-      'total_income_label': 'Total Income',
-      'total_expenses_label': 'Total Expenses',
-      'settings': 'Settings',
-      'app_version': 'Foloosy Fein - Version 1.1.0',
-      'reset_onboarding': 'Restart Onboarding',
-      'general_preferences': 'General Preferences',
-      'dark_mode': 'Dark Mode',
-      'interactive_sounds': 'Interactive Sounds (Cash Sound)',
-      'preferred_currency': 'Preferred Currency',
-      'widget_preview_title': 'Home Widget Preview',
-      'app_language': 'App Language',
-      'no_spend_title': 'No-Spend Calendar',
-      'current_streak': 'Current Streak',
-      'longest_streak': 'Longest Streak',
-      'days': 'days',
-      'calendar_legend': 'Current Month Days (Green = No Spend | Red = Spent)',
-      'wrapped_slide0_title': 'Your 2026 Money Wrapped',
-      'wrapped_slide0_desc': 'You recorded transactions and tracked your money with great precision!',
-      'wrapped_slide0_ops': 'Total Transactions: {}',
-      'wrapped_slide1_title': 'Your Wallet\'s Biggest Enemy',
-      'wrapped_slide1_desc': 'The category you spent the most on this year is:',
-      'wrapped_slide1_spent': 'With total expenses of: {} {}',
-      'wrapped_slide2_title': 'Biggest Financial Hit!',
-      'wrapped_slide2_desc': 'The biggest expense transaction you recorded was:',
-      'wrapped_slide2_val': 'With a value of: {} {}',
-      'wrapped_slide3_title': 'Share Wrapped Card',
-      'wrapped_slide3_item1': '• Recorded: {} transactions',
-      'wrapped_slide3_item2': '• Top Category: {}',
-      'wrapped_slide3_item3': '• Biggest Transaction: {}',
-      'share_wrapped': 'Share Wrapped',
-      'saving_wrapped': 'Saving and sharing wrapped...',
-      'streak_shop': 'Savings & Streaks Shop',
-      'your_coins': 'Your Current Coins Balance',
-      'shop_tip': 'Save more.. check in daily.. earn more coins! 😉',
-      'buy_now': 'Buy Now',
-      'activate_theme': 'Activate Theme',
-      'unlocked': 'Unlocked',
-      'active_now': 'Active',
-      'theme_gold_title': 'Royal Golden Theme 👑',
-      'theme_gold_desc': 'A glowing golden look giving the app a royal touch of wealth!',
-      'theme_autumn_title': 'Warm Autumn Theme 🍂',
-      'theme_autumn_desc': 'An autumn look with warm colors and eyes-friendly orange patterns.',
-      'theme_rare_icons_title': 'Rare Premium Icons 💎',
-      'theme_rare_icons_desc': 'Additional rare and animated icons to categorize your transactions.',
-      'buy_success': '🎉 Congratulations! You bought "{}" successfully!',
-      'buy_fail': 'Not enough coins balance to complete the purchase! 🥺',
-      'pet_name': 'Piggy Bank "Foloos" 💰',
-      'pet_mood_normal': 'Balanced & Wise! 🙂',
-      'pet_comment_normal': 'We are stable so far.. don\'t forget to record every transaction! 😉',
-      'pet_mood_fed': 'Gratified & Full! 🥰',
-      'pet_comment_fed': 'Wow artist.. your food is golden! My tummy thanks you! 🥰',
-      'pet_mood_overrun': 'Crying over money! 😢',
-      'pet_comment_overrun': 'Oh dear! The budget flew away, champion! 😢💸',
-      'pet_mood_warning': 'Worried about wallet! 😟',
-      'pet_comment_warning': 'Look.. we are entering a danger zone, fasten your seatbelt! 😟',
-      'pet_mood_negative': 'Below Zero! 🥶',
-      'pet_comment_negative': 'Below Zero? 🥶 We need a financial miracle or immediate cost-cutting!',
-      'pet_mood_gold': 'Proud of your savings! 👑',
-      'pet_comment_gold': 'Wonderful! A penny saved is a penny earned! 👑🏆',
-      'feed_btn': 'Feed for 10 coins',
-      'feed_success_msg': '🐷: Yum! That tastes great, thank you! 🥰 (+ love)',
-      'feed_fail_msg': 'You do not have enough coins! 🥺 (Requires 10 coins)',
-      'coins_balance_label': 'Coins Balance: ',
-      'currency_egp': 'EGP',
-      'currency_sar': 'SAR',
-      'currency_aed': 'AED',
-      'currency_kwd': 'KWD',
-      'currency_jod': 'JOD',
-      'currency_sdg': 'SDG',
-      'currency_usd': 'USD',
-      'onboarding_currency_title': 'Select Preferred Currency',
-      'onboarding_theme_title': 'Select Preferred Theme',
-      'onboarding_light_mode': 'Light Mode',
-      'onboarding_dark_mode': 'Dark Mode',
-      'onboarding_goal_title': 'What is your primary financial goal?',
-      'next': 'Next',
-      'previous': 'Previous',
-      'finish': 'Finish',
-      'start_journey': 'Start Now',
-      'saving_goal_completed': 'Savings goal completed successfully! 🏆',
-      'saving_goal_great': 'Awesome! You saved money successfully 🎉',
-      'challenge_completed_msg': 'Congratulations! You completed the saving challenge! 🥳',
-      'record_saved_successfully': 'Transaction saved successfully! 💸',
-      'premium_title': 'Golden Membership (Premium)',
-      'premium_body_active': 'You are a golden member now! All ads disabled for life! 🏆',
-      'premium_body_inactive': 'Get rid of interstitial ads and banners forever with one touch.',
-      'premium_upgrade_btn': 'Upgrade to Golden Version',
-      'premium_upgrade_alert': 'Get a completely ad-free experience to support the app in one touch!',
-      'premium_upgrade_alert_btn': 'Buy Golden Version 🚀',
-      'premium_success_msg': 'Congratulations! Golden Version activated and ads removed successfully! 🏆',
-      'premium_buy_mock': 'Buy Now (Mock)',
-      'cancel': 'Cancel',
-    }
-  };
 }

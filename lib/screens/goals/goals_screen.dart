@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/goal_model.dart';
 import '../../widgets/confetti_widget.dart';
 import '../../core/utils/haptic_helper.dart';
@@ -34,6 +35,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   void _showAddGoalDialog() {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -52,17 +54,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'إضافة هدف ادخار جديد 🎯',
+              Text(
+                lp.translate('add_new_goal'),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _goalTitleController,
                 decoration: InputDecoration(
-                  labelText: 'اسم الهدف (مثلاً: شراء هاتف، رحلة الصيف)',
-                  labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                  labelText: lp.translate('goal_title_hint'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
@@ -71,8 +72,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 controller: _goalTargetController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'المبلغ المستهدف (المطلوب تجميعه)',
-                  labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                  labelText: lp.translate('goal_target_hint'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.monetization_on),
                 ),
@@ -93,8 +93,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   HapticHelper.mediumTap();
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تمت إضافة الهدف بنجاح! 🎯', style: TextStyle(fontFamily: 'Amiri')),
+                    SnackBar(
+                      content: Text(lp.translate('goal_added_success')),
                       backgroundColor: Colors.green,
                     ),
                   );
@@ -103,7 +103,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('حفظ الهدف', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+                child: Text(lp.translate('save_goal'), style: const TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -113,6 +113,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   void _showAddProgressDialog(GoalModel goal) {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -132,17 +133,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'ادخار لـ: ${goal.title} 💰',
+                lp.translate('save_for_goal').replaceFirst('{}', goal.title),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _savingsAmountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'المبلغ المراد إضافته الآن للهدف',
-                  labelStyle: const TextStyle(fontFamily: 'Amiri'),
+                  labelText: lp.translate('amount_to_add'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   prefixIcon: const Icon(Icons.add_card),
                 ),
@@ -170,20 +170,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('🎉 مبروك يا وحش!', style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold)),
-                        content: Text('حققت هدفك الادخاري: "${goal.title}" بنجاح! 🏆', style: const TextStyle(fontFamily: 'Amiri')),
+                        title: Text(lp.translate('congrats_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        content: Text(lp.translate('goal_completed_desc').replaceFirst('{}', goal.title)),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('عاش 🚀', style: TextStyle(fontFamily: 'Amiri', fontSize: 16)),
+                            child: Text(lp.translate('congrats_btn'), style: const TextStyle(fontSize: 16)),
                           )
                         ],
                       ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('تمت إضافة المدخرات للهدف! 💸', style: TextStyle(fontFamily: 'Amiri')),
+                      SnackBar(
+                        content: Text(lp.translate('progress_added_success')),
                         backgroundColor: Colors.green,
                       ),
                     );
@@ -193,7 +193,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('إضافة للرصيد', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+                child: Text(lp.translate('add_to_balance'), style: const TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -204,11 +204,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text('أهداف الادخار', style: TextStyle(fontFamily: 'Amiri')),
+            title: Text(languageProvider.translate('goals')),
             centerTitle: true,
           ),
           body: Consumer<TransactionProvider>(
@@ -224,16 +225,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       children: [
                         Icon(Icons.track_changes, size: 64, color: Colors.grey.shade400),
                         const SizedBox(height: 16),
-                        const Text(
-                          "مفيش أهداف ادخار مسجلة!\nحدد هدفك الآن ووفر فلوسك عشان تحققه 🎯",
+                        Text(
+                          languageProvider.translate('no_goals_msg'),
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, height: 1.5, fontFamily: 'Amiri', color: Colors.grey),
+                          style: const TextStyle(fontSize: 16, height: 1.5, color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
                           onPressed: _showAddGoalDialog,
                           icon: const Icon(Icons.add),
-                          label: const Text('إضافة أول هدف', style: TextStyle(fontFamily: 'Amiri')),
+                          label: Text(languageProvider.translate('add_first_goal')),
                           style: ElevatedButton.styleFrom(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
@@ -275,7 +276,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  fontFamily: 'Amiri',
                                 ),
                               ),
                               Row(
@@ -310,30 +310,33 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'المدخر: ${goal.currentAmount.toStringAsFixed(2)} $currency',
+                                languageProvider.translate('saved_amount')
+                                    .replaceFirst('{}', goal.currentAmount.toStringAsFixed(2))
+                                    .replaceFirst('{}', currency),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: isCompleted ? Colors.green : null,
                                 ),
                               ),
                               Text(
-                                'المستهدف: ${goal.targetAmount.toStringAsFixed(2)} $currency',
+                                languageProvider.translate('target_amount')
+                                    .replaceFirst('{}', goal.targetAmount.toStringAsFixed(2))
+                                    .replaceFirst('{}', currency),
                                 style: const TextStyle(color: Colors.grey),
                               ),
                             ],
                           ),
                           if (isCompleted) ...[
                             const SizedBox(height: 8),
-                            const Row(
+                            Row(
                               children: [
-                                Icon(Icons.emoji_events, color: Colors.amber, size: 16),
-                                SizedBox(width: 4),
+                                const Icon(Icons.emoji_events, color: Colors.amber, size: 16),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'تم تحقيق الهدف بنجاح! 🏆',
-                                  style: TextStyle(
+                                  languageProvider.translate('goal_completed_success'),
+                                  style: const TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'Amiri',
                                     fontSize: 12,
                                   ),
                                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/gamification_provider.dart';
+import '../../../providers/language_provider.dart';
 import '../../../core/utils/haptic_helper.dart';
 
 class FinancialPetWidget extends StatefulWidget {
@@ -15,6 +16,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
   bool _showHearts = false;
 
   void _feedPet(GamificationProvider gamification) async {
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
     if (gamification.userCoins >= 10) {
       HapticHelper.successTap();
       await gamification.addCoins(-10);
@@ -22,8 +24,8 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
         _showHearts = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('🐷: هممم! طعمها حلو أوي، تسلم إيدك! 🥰 (+ حب)', style: TextStyle(fontFamily: 'Amiri')),
+        SnackBar(
+          content: Text(lp.translate('feed_success_msg')),
           backgroundColor: Colors.pink,
         ),
       );
@@ -37,8 +39,8 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
     } else {
       HapticHelper.heavyTap();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('معندكش عملات كافية لتأكيل الحصالة! 🥺 (مطلوب 10 عملات)', style: TextStyle(fontFamily: 'Amiri')),
+        SnackBar(
+          content: Text(lp.translate('feed_fail_msg')),
           backgroundColor: Colors.red,
         ),
       );
@@ -49,6 +51,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
   Widget build(BuildContext context) {
     final transProvider = Provider.of<TransactionProvider>(context);
     final gamification = Provider.of<GamificationProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
     
     final balance = transProvider.totalBalance;
     final income = transProvider.monthlyIncome;
@@ -67,34 +70,34 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
 
     // Determine Pet State
     String petImagePath = 'assets/branding/mascot_happy.png';
-    String petMood = 'متزن وواعي! 🙂';
-    String petComment = 'مستقرين لحد دلوقتي.. بس متغفلنيش وسجل أول بأول! 😉';
+    String petMood = languageProvider.translate('pet_mood_normal');
+    String petComment = languageProvider.translate('pet_comment_normal');
     Color moodColor = Colors.blue;
 
     if (_showHearts) {
       petImagePath = 'assets/branding/mascot_happy.png';
-      petMood = 'ممتن وشبعان! 🥰';
-      petComment = 'يا سلام يا فنان.. طعامك طعمه دهب! كرشي بيشكرك! 🥰';
+      petMood = languageProvider.translate('pet_mood_fed');
+      petComment = languageProvider.translate('pet_comment_fed');
       moodColor = Colors.pink;
     } else if (isOverrun) {
       petImagePath = 'assets/branding/mascot_sad.png';
-      petMood = 'بيعيط على الفلوس! 😢';
-      petComment = 'يا لهوي! الميزانية طارت في الهواء يا فخر العرب! 😢💸';
+      petMood = languageProvider.translate('pet_mood_overrun');
+      petComment = languageProvider.translate('pet_comment_overrun');
       moodColor = Colors.red;
     } else if (isWarning) {
       petImagePath = 'assets/branding/mascot_worried.png';
-      petMood = 'قلقان على محفظتك! 😟';
-      petComment = 'بقولك إيه.. إحنا داخلين على منعطف خطر، اربط الحزام! 😟';
+      petMood = languageProvider.translate('pet_mood_warning');
+      petComment = languageProvider.translate('pet_comment_warning');
       moodColor = Colors.orange;
     } else if (balance < 0) {
       petImagePath = 'assets/branding/mascot_sad.png';
-      petMood = 'تحت الصفر! 🥶';
-      petComment = 'تحت الصفر؟ 🥶 كدا إحنا محتاجين معجزة مالية أو تقليل مصاريف فوري!';
+      petMood = languageProvider.translate('pet_mood_negative');
+      petComment = languageProvider.translate('pet_comment_negative');
       moodColor = Colors.purple;
     } else if (expenses < 0.3 * income && income > 0) {
       petImagePath = 'assets/branding/mascot_gold.png';
-      petMood = 'سعيد وفخور بمدخراتك! 👑';
-      petComment = 'يا سلام يا فنان.. القرش الأبيض بينفع في اليوم الأسود! 👑🏆';
+      petMood = languageProvider.translate('pet_mood_gold');
+      petComment = languageProvider.translate('pet_comment_gold');
       moodColor = Colors.green;
     }
 
@@ -149,9 +152,9 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'الحصالة "فلوس" 💰',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Amiri'),
+                          Text(
+                            languageProvider.translate('pet_name'),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -161,7 +164,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                             ),
                             child: Text(
                               petMood,
-                              style: TextStyle(fontSize: 10, color: moodColor, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                              style: TextStyle(fontSize: 10, color: moodColor, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -169,7 +172,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                       const SizedBox(height: 6),
                       Text(
                         petComment,
-                        style: const TextStyle(fontSize: 13, height: 1.4, fontFamily: 'Amiri'),
+                        style: const TextStyle(fontSize: 13, height: 1.4),
                       ),
                     ],
                   ),
@@ -186,9 +189,9 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
               children: [
                 Row(
                   children: [
-                    const Text(
-                      'رصيد عملاتك: ',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Amiri'),
+                    Text(
+                      languageProvider.translate('coins_balance_label'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                     Text(
                       '${gamification.userCoins}',
@@ -204,7 +207,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                 ElevatedButton.icon(
                   onPressed: () => _feedPet(gamification),
                   icon: const Icon(Icons.cookie, size: 16),
-                  label: const Text('أكله بـ 10 عملات', style: TextStyle(fontFamily: 'Amiri', fontSize: 12)),
+                  label: Text(languageProvider.translate('feed_btn'), style: const TextStyle(fontSize: 12)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.pink.shade50,
                     foregroundColor: Colors.pink,

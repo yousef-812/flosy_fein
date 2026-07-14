@@ -58,6 +58,10 @@ void main() async {
   // Initialize audio helper
   await AudioHelper.init();
 
+  // Initialize language provider
+  final languageProvider = LanguageProvider();
+  await languageProvider.init();
+
   runApp(
     MultiProvider(
       providers: [
@@ -65,7 +69,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => OnboardingProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => GamificationProvider()),
-        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider.value(value: languageProvider),
       ],
       child: const FlosyFeinApp(),
     ),

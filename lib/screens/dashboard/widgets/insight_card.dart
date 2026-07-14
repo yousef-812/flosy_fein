@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/language_provider.dart';
 import '../../../models/transaction_model.dart';
 import '../../../core/utils/personality_helper.dart';
 
@@ -30,7 +32,8 @@ class _InsightCardState extends State<InsightCard> {
   }
 
   void _loadInsights() {
-    _insights = PersonalityHelper.getDailyInsights(widget.transactions, widget.currency);
+    final lp = Provider.of<LanguageProvider>(context, listen: false);
+    _insights = PersonalityHelper.getDailyInsights(widget.transactions, widget.currency, lp.currentLanguage);
   }
 
   void _startTimer() {
@@ -57,7 +60,9 @@ class _InsightCardState extends State<InsightCard> {
 
   @override
   Widget build(BuildContext context) {
-    final quote = PersonalityHelper.getFunnyQuote(widget.transactions);
+    final languageProvider = Provider.of<LanguageProvider>(context);
+    _insights = PersonalityHelper.getDailyInsights(widget.transactions, widget.currency, languageProvider.currentLanguage);
+    final quote = PersonalityHelper.getFunnyQuote(widget.transactions, languageProvider.currentLanguage);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,19 +93,18 @@ class _InsightCardState extends State<InsightCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'شخصية فلوس 💰:',
-                        style: TextStyle(
+                      Text(
+                        '${languageProvider.translate("pet_name")}:',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1E88E5),
-                          fontFamily: 'Amiri',
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         quote,
-                        style: const TextStyle(fontSize: 15, height: 1.4, fontFamily: 'Amiri'),
+                        style: const TextStyle(fontSize: 15, height: 1.4),
                       ),
                     ],
                   ),
@@ -130,7 +134,6 @@ class _InsightCardState extends State<InsightCard> {
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           height: 1.4,
-                          fontFamily: 'Amiri',
                         ),
                       ),
                     ),

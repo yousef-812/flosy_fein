@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../core/utils/haptic_helper.dart';
 
@@ -58,6 +59,7 @@ class NoSpendScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TransactionProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
     final streaks = _calculateStreaks(provider.transactions);
     final now = DateTime.now();
 
@@ -70,7 +72,7 @@ class NoSpendScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تقويم أيام الادخار', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('no_spend_title')),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -92,10 +94,10 @@ class NoSpendScreen extends StatelessWidget {
                   children: [
                     Column(
                       children: [
-                        const Text('السلسلة الحالية', style: TextStyle(fontFamily: 'Amiri', fontSize: 16)),
+                        Text(languageProvider.translate('current_streak'), style: const TextStyle(fontSize: 16)),
                         const SizedBox(height: 8),
                         Text(
-                          '${streaks['current']} أيام',
+                          '${streaks['current']} ${languageProvider.translate('days')}',
                           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                       ],
@@ -103,10 +105,10 @@ class NoSpendScreen extends StatelessWidget {
                     Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.3)),
                     Column(
                       children: [
-                        const Text('أطول سلسلة ادخار', style: TextStyle(fontFamily: 'Amiri', fontSize: 16)),
+                        Text(languageProvider.translate('longest_streak'), style: const TextStyle(fontSize: 16)),
                         const SizedBox(height: 8),
                         Text(
-                          '${streaks['longest']} أيام',
+                          '${streaks['longest']} ${languageProvider.translate('days')}',
                           style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
                         ),
                       ],
@@ -118,10 +120,10 @@ class NoSpendScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // No Spend Calendar Legend
-            const Text(
-              'أيام الشهر الحالي (الأخضر = بلا صرف | الأحمر = صرف)',
+            Text(
+              languageProvider.translate('calendar_legend'),
               textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 16),
 
@@ -187,17 +189,20 @@ class NoSpendScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Motivational quote
-            const Card(
+            Card(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text('💡 نصيحة فلوس لليوم:', style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold, color: Colors.blue)),
-                    SizedBox(height: 8),
                     Text(
-                      'المنافسة الحقيقية هي كسر رقمك القياسي في الادخار! حافظ على المربعات الخضراء 🟢 لأطول فترة ممكنة لتبني عادات مالية لا تقهر 😉.',
+                      languageProvider.translate('no_spend_tip_title'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      languageProvider.translate('no_spend_tip_body'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'Amiri', fontSize: 13, color: Colors.grey),
+                      style: const TextStyle(fontSize: 13, color: Colors.grey),
                     ),
                   ],
                 ),

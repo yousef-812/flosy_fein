@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/gamification_provider.dart';
+import '../../../providers/language_provider.dart';
 import '../../../widgets/confetti_widget.dart';
 import '../../../core/utils/haptic_helper.dart';
 
@@ -52,21 +53,21 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
     });
   }
 
-  void _buyItem(GamificationProvider provider, String itemId, int price, String title) async {
+  void _buyItem(GamificationProvider provider, String itemId, int price, String title, LanguageProvider lp) async {
     final success = await provider.buyTheme(itemId, price);
     if (success) {
       _triggerConfetti();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('🎉 مبروك! لقد اشتريت "$title" بنجاح!', style: const TextStyle(fontFamily: 'Amiri')),
+          content: Text(lp.translate('buy_success').replaceFirst('{}', title)),
           backgroundColor: Colors.amber,
         ),
       );
     } else {
       HapticHelper.heavyTap();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('رصيد عملاتك لا يكفي لإتمام عملية الشراء! 🥺', style: TextStyle(fontFamily: 'Amiri')),
+        SnackBar(
+          content: Text(lp.translate('buy_fail')),
           backgroundColor: Colors.red,
         ),
       );
@@ -76,12 +77,13 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
   @override
   Widget build(BuildContext context) {
     final gamification = Provider.of<GamificationProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
 
     return Stack(
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text('متجر التوفير والسلاسل', style: TextStyle(fontFamily: 'Amiri')),
+            title: Text(languageProvider.translate('streak_shop')),
             centerTitle: true,
           ),
           body: Column(
@@ -93,9 +95,9 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 child: Column(
                   children: [
-                    const Text(
-                      'رصيد عملاتك الحالي',
-                      style: TextStyle(fontFamily: 'Amiri', fontSize: 16, color: Colors.grey),
+                    Text(
+                      languageProvider.translate('your_coins'),
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -113,9 +115,9 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'وفر أكتر.. تسجل دخول يومي.. تجمع عملات أكتر! 😉',
-                      style: TextStyle(fontFamily: 'Amiri', fontSize: 12, color: Colors.grey),
+                    Text(
+                      languageProvider.translate('shop_motivation'),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -131,6 +133,9 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                     final itemId = item['id'] as String;
                     final isUnlocked = gamification.unlockedThemes.contains(itemId);
                     final isActive = gamification.activeTheme == itemId;
+
+                    final itemTitle = languageProvider.translate(itemId + '_title');
+                    final itemDesc = languageProvider.translate(itemId + '_desc');
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16.0),
@@ -152,18 +157,19 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  item['title'],
+                                  itemTitle,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'Amiri',
                                   ),
                                 ),
                                 if (isUnlocked)
                                   Chip(
                                     label: Text(
-                                      isActive ? 'مفعّل حالياً' : 'مفتوح 🔓',
-                                      style: const TextStyle(fontFamily: 'Amiri', fontSize: 11),
+                                      isActive 
+                                          ? languageProvider.translate('theme_active') 
+                                          : languageProvider.translate('theme_unlocked'),
+                                      style: const TextStyle(fontSize: 11),
                                     ),
                                     backgroundColor: isActive ? Colors.amber.withOpacity(0.2) : Colors.green.withOpacity(0.2),
                                   )
@@ -185,8 +191,8 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              item['desc'],
-                              style: const TextStyle(fontSize: 13, color: Colors.grey, fontFamily: 'Amiri'),
+                              itemDesc,
+                              style: const TextStyle(fontSize: 13, color: Colors.grey),
                             ),
                             const SizedBox(height: 16),
                             
@@ -205,7 +211,7 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                                     style: ElevatedButton.styleFrom(
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
-                                    child: const Text('تفعيل السمة', style: TextStyle(fontFamily: 'Amiri')),
+                                    child: Text(languageProvider.translate('activate_theme_btn')),
                                   )
                                 else
                                   ElevatedButton(
@@ -213,14 +219,15 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
                                       gamification,
                                       itemId,
                                       item['price'],
-                                      item['title'],
+                                      itemTitle,
+                                      languageProvider,
                                     ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.amber,
                                       foregroundColor: Colors.black87,
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
-                                    child: const Text('شراء الآن 🪙', style: TextStyle(fontFamily: 'Amiri')),
+                                    child: Text(languageProvider.translate('buy_now_btn')),
                                   ),
                               ],
                             )
