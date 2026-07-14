@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../models/transaction_model.dart';
 import '../models/budget_model.dart';
 import '../models/goal_model.dart';
@@ -107,6 +108,19 @@ class TransactionProvider extends ChangeNotifier {
     if (isExpense) {
       _updateBudgetSpent(categoryName, amount);
       _checkChallengesOnExpenseAdded(categoryName, amount);
+    }
+
+    try {
+      FirebaseAnalytics.instance.logEvent(
+        name: 'add_transaction',
+        parameters: {
+          'amount': amount,
+          'is_expense': isExpense ? 1 : 0,
+          'category': categoryName,
+        },
+      );
+    } catch (e) {
+      debugPrint('Firebase Analytics error: $e');
     }
 
     _loadData();

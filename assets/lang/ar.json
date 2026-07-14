@@ -160,5 +160,15 @@
   "add_first_goal": "إضافة أول هدف",
   "saved_amount": "المدخر: {} {}",
   "target_amount": "المستهدف: {} {}",
-  "goal_completed_success": "تم تحقيق الهدف بنجاح! 🏆"
+  "goal_completed_success": "تم تحقيق الهدف بنجاح! 🏆",
+  "onboarding_welcome": "أهلاً بك في فلوسي فين 👋",
+  "onboarding_welcome_sub": "هنسألك 3 أسئلة سريعة عشان نضبط التطبيق ليك.",
+  "onboarding_step_progress": "الخطوة {} من 3",
+  "onboarding_goal1_title": "أوفر فلوس",
+  "onboarding_goal1_desc": "تقليل المصاريف الزائدة والادخار للمستقبل.",
+  "onboarding_goal2_title": "أعرف مصاريفي",
+  "onboarding_goal2_desc": "تتبع أين تذهب أموالك كل شهر بالتفصيل.",
+  "onboarding_goal3_title": "أتابع ميزانية",
+  "onboarding_goal3_desc": "وضع حد أقصى للمصاريف لتفادي الديون.",
+  "start_using": "ابدأ الاستخدام 🚀"
 }

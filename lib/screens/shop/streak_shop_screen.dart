@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../../providers/gamification_provider.dart';
 import '../../../providers/language_provider.dart';
 import '../../../widgets/confetti_widget.dart';
@@ -57,6 +58,17 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
     final success = await provider.buyTheme(itemId, price);
     if (success) {
       _triggerConfetti();
+      try {
+        FirebaseAnalytics.instance.logEvent(
+          name: 'buy_theme',
+          parameters: {
+            'item_id': itemId,
+            'price': price,
+          },
+        );
+      } catch (e) {
+        debugPrint('Firebase Analytics error: $e');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(lp.translate('buy_success').replaceFirst('{}', title)),
