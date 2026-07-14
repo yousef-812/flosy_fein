@@ -30,51 +30,33 @@ class AdHelper {
     _lastInterstitialShowTime = DateTime.now();
   }
 
-  // Ad Unit IDs
+  // Ad Unit IDs - Always returning test IDs for verification in release APK
   static String get bannerAdUnitId {
     if (isPremiumUser) return '';
-    if (kDebugMode) {
-      if (Platform.isAndroid) {
-        return 'ca-app-pub-3940256099942544/6300978111'; // Android Test Banner
-      } else if (Platform.isIOS) {
-        return 'ca-app-pub-3940256099942544/2934735716'; // iOS Test Banner
-      }
-    }
-    // Production Banner ID
-    if (Platform.isAndroid || Platform.isIOS) {
-      return 'ca-app-pub-4624889874966809/6394107823';
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-3940256099942544/6300978111'; // Android Test Banner
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-3940256099942544/2934735716'; // iOS Test Banner
     }
     return '';
   }
 
   static String get interstitialAdUnitId {
     if (isPremiumUser) return '';
-    if (kDebugMode) {
-      if (Platform.isAndroid) {
-        return 'ca-app-pub-3940256099942544/1033173712'; // Android Test Interstitial
-      } else if (Platform.isIOS) {
-        return 'ca-app-pub-3940256099942544/4411468910'; // iOS Test Interstitial
-      }
-    }
-    // Production Interstitial ID
-    if (Platform.isAndroid || Platform.isIOS) {
-      return 'ca-app-pub-4624889874966809/1109991553';
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-3940256099942544/1033173712'; // Android Test Interstitial
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-3940256099942544/4411468910'; // iOS Test Interstitial
     }
     return '';
   }
 
   static String get nativeAdUnitId {
     if (isPremiumUser) return '';
-    if (kDebugMode) {
-      if (Platform.isAndroid) {
-        return 'ca-app-pub-3940256099942544/2247696110'; // Android Test Native
-      } else if (Platform.isIOS) {
-        return 'ca-app-pub-3940256099942544/3986694507'; // iOS Test Native
-      }
-    }
-    // Production Native ID
-    if (Platform.isAndroid || Platform.isIOS) {
-      return 'ca-app-pub-4624889874966809/1718852877';
+    if (Platform.isAndroid) {
+      return 'ca-app-pub-3940256099942544/2247696110'; // Android Test Native
+    } else if (Platform.isIOS) {
+      return 'ca-app-pub-3940256099942544/3986694507'; // iOS Test Native
     }
     return '';
   }

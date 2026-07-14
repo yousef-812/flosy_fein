@@ -33,9 +33,16 @@ dev_dependencies:
   hive_generator: ^2.0.1
   build_runner: ^2.4.12
   flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
     - assets/
     - assets/lang/
+    - assets/branding/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/branding/app_icon.jpg"
