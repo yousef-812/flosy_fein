@@ -3,8 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/gamification_provider.dart';
 import '../../models/category_model.dart';
 import '../../core/utils/ad_helper.dart';
+import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/audio_helper.dart';
+import '../../widgets/digital_receipt_dialog.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -64,23 +68,41 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final amount = double.parse(_amountController.text.trim());
 
     void performSave() {
-      Provider.of<TransactionProvider>(context, listen: false).addTransaction(
+      final provider = Provider.of<TransactionProvider>(context, listen: false);
+      provider.addTransaction(
         title: title,
         amount: amount,
         date: _selectedDate,
         isExpense: _isExpense,
         categoryName: _selectedCategory,
       );
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم حفظ المعاملة بنجاح! 💸', style: TextStyle(fontFamily: 'Amiri')),
-          backgroundColor: Colors.green,
+
+      // Award +5 coins for recording a transaction
+      Provider.of<GamificationProvider>(context, listen: false).addCoins(5);
+
+      HapticHelper.successTap();
+      AudioHelper.playCashSound();
+
+      // Show digital receipt dialog, and navigate back on close
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => DigitalReceiptDialog(
+          title: title,
+          amount: amount,
+          date: _selectedDate,
+          isExpense: _isExpense,
+          categoryName: _selectedCategory,
+          currency: provider.preferredCurrency,
         ),
-      );
+      ).then((_) {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
     }
 
-    // Interstitial ad triggering on transaction save with frequency capping
+    // Interstitial ad triggering with frequency capping
     if (_isAdLoaded && _interstitialAd != null && AdHelper.canShowInterstitial) {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
@@ -103,7 +125,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة معاملة', style: TextStyle(fontFamily: 'Amiri')),
+        title: const Text('إضافة معاملة تفصيلية', style: TextStyle(fontFamily: 'Amiri')),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -125,6 +147,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       selectedColor: Colors.red.shade700,
                       labelStyle: TextStyle(color: _isExpense ? Colors.white : Colors.red.shade700),
                       onSelected: (selected) {
+                        HapticHelper.lightTap();
                         setState(() {
                           _isExpense = true;
                         });
@@ -141,6 +164,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       selectedColor: Colors.green.shade700,
                       labelStyle: TextStyle(color: !_isExpense ? Colors.white : Colors.green.shade700),
                       onSelected: (selected) {
+                        HapticHelper.lightTap();
                         setState(() {
                           _isExpense = false;
                         });
@@ -218,6 +242,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   final isSelected = _selectedCategory == cat.name;
                   return InkWell(
                     onTap: () {
+                      HapticHelper.lightTap();
                       setState(() {
                         _selectedCategory = cat.name;
                       });
@@ -270,6 +295,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 onTap: () async {
+                  HapticHelper.lightTap();
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: _selectedDate,
@@ -294,9 +320,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text(
-                  'حفظ المعاملة',
+                  'حفظ وعرض الإيصال 🧾',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Amiri',
                     color: Colors.white,

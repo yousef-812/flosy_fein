@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/onboarding_provider.dart';
 import '../../core/utils/ad_helper.dart';
+import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/audio_helper.dart';
+import '../../main.dart';
+import '../onboarding/onboarding_screen.dart';
+import '../../widgets/widget_preview.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -33,6 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (context.mounted) {
                   Navigator.pop(context);
                   setState(() {});
+                  HapticHelper.successTap();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('مبروك! تم تفعيل النسخة الذهبية وإزالة الإعلانات بنجاح! 🏆', style: TextStyle(fontFamily: 'Amiri')),
@@ -58,10 +65,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final transactionProvider = Provider.of<TransactionProvider>(context);
+    final onboardingProvider = Provider.of<OnboardingProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإعدادات', style: TextStyle(fontFamily: 'Amiri')),
+        title: const Text('الإعدادات العامة', style: TextStyle(fontFamily: 'Amiri')),
         centerTitle: true,
       ),
       body: ListView(
@@ -119,7 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
 
           const Text(
-            'عام',
+            'التفضيلات العامة',
             style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
           ),
           const SizedBox(height: 8),
@@ -130,7 +138,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text('الوضع الداكن (Dark Mode)', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
               value: themeProvider.isDarkMode,
               onChanged: (value) {
+                HapticHelper.lightTap();
                 themeProvider.toggleTheme(value);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Sound Toggle
+          Card(
+            child: SwitchListTile(
+              title: const Text('الأصوات التفاعلية (Cash Sound)', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              value: AudioHelper.isSoundEnabled,
+              onChanged: (value) {
+                HapticHelper.lightTap();
+                setState(() {
+                  AudioHelper.setSoundEnabled(value);
+                });
               },
             ),
           ),
@@ -151,19 +175,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }).toList(),
                 onChanged: (value) {
                   if (value != null) {
+                    HapticHelper.lightTap();
                     transactionProvider.setPreferredCurrency(value);
                   }
                 },
               ),
             ),
           ),
+          const SizedBox(height: 8),
+
+          // Reset Onboarding Option
+          Card(
+            child: ListTile(
+              title: const Text('بدء الترحيب والتهيئة من جديد', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              trailing: const Icon(Icons.restart_alt, color: Colors.orange),
+              onTap: () async {
+                HapticHelper.heavyTap();
+                await onboardingProvider.resetOnboarding();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Widget Preview Section
+          const Text(
+            'معاينة ويدجت الشاشة الرئيسية',
+            style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+          ),
+          const SizedBox(height: 12),
+          Center(child: WidgetPreview(provider: transactionProvider)),
           const SizedBox(height: 24),
 
           // About App Info
           const Column(
             children: [
               Text(
-                'تطبيق فلوسي فين - النسخة 1.0.0',
+                'تطبيق فلوسي فين - النسخة 1.1.0',
                 style: TextStyle(color: Colors.grey, fontSize: 12),
               ),
               SizedBox(height: 4),

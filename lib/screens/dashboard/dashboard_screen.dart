@@ -4,10 +4,46 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../providers/transaction_provider.dart';
 import '../../models/category_model.dart';
 import '../../widgets/ad_banner_widget.dart';
+import '../../widgets/spending_story_widget.dart';
 import '../transaction/add_transaction_screen.dart';
+import '../budget/budget_screen.dart';
+import '../goals/goals_screen.dart';
+import '../challenges/challenges_screen.dart';
+import 'widgets/heat_map_widget.dart';
+import 'widgets/insight_card.dart';
+import 'widgets/animated_counter.dart';
+import 'balance_details_screen.dart';
+import '../no_spend/no_spend_screen.dart';
+import '../wrapped/wrapped_screen.dart';
+import '../../providers/gamification_provider.dart';
+import '../shop/streak_shop_screen.dart';
+import 'widgets/financial_pet_widget.dart';
+import '../../widgets/confetti_widget.dart';
+import '../../core/utils/haptic_helper.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  bool _showCheckInConfetti = false;
+
+  void _triggerCheckInConfetti() {
+    setState(() {
+      _showCheckInConfetti = true;
+    });
+    HapticHelper.successTap();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showCheckInConfetti = false;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,58 +66,221 @@ class DashboardScreen extends StatelessWidget {
           }
         }
 
-        return Scaffold(
-          body: SafeArea(
+        // Dynamic Color Shading based on balance
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        Color dynamicBackgroundColor;
+        if (isDark) {
+          dynamicBackgroundColor = balance >= 0
+              ? Color.lerp(const Color(0xFF121212), Colors.green.shade900.withOpacity(0.15), 0.4)!
+              : Color.lerp(const Color(0xFF121212), Colors.red.shade900.withOpacity(0.15), 0.4)!;
+        } else {
+          dynamicBackgroundColor = balance >= 0
+              ? Color.lerp(const Color(0xFFFBF4DF), Colors.green.shade50, 0.4)!
+              : Color.lerp(const Color(0xFFFBF4DF), Colors.red.shade50, 0.4)!;
+        }
+
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: dynamicBackgroundColor,
+              body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // App title & funny tagline
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  // App Title & Tagline & Instagram-like Story Circle
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'فلوسي فين',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Amiri',
-                          color: Color(0xFF1E88E5),
+                      // Story Circle
+                      GestureDetector(
+                        onTap: () {
+                          HapticHelper.mediumTap();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SpendingStoryWidget(provider: provider),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [Colors.purple, Colors.pink, Colors.orange, Colors.yellow],
+                                  begin: Alignment.topRight,
+                                  end: Alignment.bottomLeft,
+                                ),
+                              ),
+                              child: CircleAvatar(
+                                radius: 24,
+                                backgroundColor: isDark ? Colors.black : Colors.white,
+                                child: const Icon(Icons.auto_awesome, color: Colors.amber, size: 24),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'قصتي الشهرية',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        '« سجلني قبل ما تاكلني »',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                          fontFamily: 'Amiri',
-                          color: Colors.grey,
-                        ),
+                      
+                      // Title
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'فلوسي فين',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Amiri',
+                              color: Color(0xFF1E88E5),
+                            ),
+                          ),
+                          Text(
+                            '« سجلني قبل ما تاكلني »',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'Amiri',
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // Coins balance button
+                      Consumer<GamificationProvider>(
+                        builder: (context, gamification, child) {
+                          return GestureDetector(
+                            onTap: () {
+                              HapticHelper.mediumTap();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const StreakShopScreen()),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.12),
+                                border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(7),
+                                    child: Image.asset('assets/branding/coin.png', width: 14, height: 14, fit: BoxFit.cover),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${gamification.userCoins}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.amber),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // Total Balance Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'الرصيد المتبقي',
-                            style: TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'Amiri'),
+                  // "Foloos" Personality Bubble & Daily Insight
+                  InsightCard(
+                    transactions: provider.transactions,
+                    currency: currency,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Financial Pet "Hassala" Mascot
+                  const FinancialPetWidget(),
+                  const SizedBox(height: 12),
+
+                  // Daily Check-in Gift Card (Only shown if can check in today)
+                  Consumer<GamificationProvider>(
+                    builder: (context, gamification, child) {
+                      if (!gamification.canCheckInToday) return const SizedBox.shrink();
+                      return Card(
+                        color: Colors.amber.withOpacity(0.15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: Colors.amber, width: 2),
+                        ),
+                        child: ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset('assets/branding/gift.png', width: 36, height: 36, fit: BoxFit.cover),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${balance.toStringAsFixed(2)} $currency',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: balance >= 0 ? Colors.green : Colors.red,
-                            ),
+                          title: const Text(
+                            'مكافأة تسجيل الدخول اليومي! 🎉',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Amiri', fontSize: 15),
                           ),
+                          subtitle: const Text(
+                            'احصل على 10 عملات مجانية لمجرد فتح التطبيق اليوم.',
+                            style: TextStyle(fontFamily: 'Amiri', fontSize: 12),
+                          ),
+                          trailing: ElevatedButton(
+                            onPressed: () async {
+                              final success = await gamification.claimDailyCheckIn();
+                              if (success) {
+                                _triggerCheckInConfetti();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('🎉 تم استلام 10 عملات مجانية بنجاح!', style: TextStyle(fontFamily: 'Amiri')),
+                                    backgroundColor: Colors.amber,
+                                  ),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                            child: const Text('استلام', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+                          ),
+                        ),
+                      );
+                    }
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Total Balance Card with Hero & Transition
+                  GestureDetector(
+                    onTap: () {
+                      HapticHelper.mediumTap();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BalanceDetailsScreen()),
+                      );
+                    },
+                    child: Hero(
+                      tag: 'balance_card_hero',
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'الرصيد المتبقي',
+                                style: TextStyle(fontSize: 16, color: Colors.grey, fontFamily: 'Amiri'),
+                              ),
+                              const SizedBox(height: 8),
+                              AnimatedCounter(
+                                value: balance,
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: balance >= 0 ? Colors.green : Colors.red,
+                                ),
+                                suffix: currency,
+                              ),
                           const SizedBox(height: 20),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -123,7 +322,63 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                ),
+              ),
+                  const SizedBox(height: 16),
+
+                  // Premium Feature Access Buttons (Horizontal scroll or Grid)
+                  Row(
+                    children: [
+                      _buildQuickFeatureCard(
+                        context,
+                        title: 'الميزانيات',
+                        icon: Icons.pie_chart,
+                        color: Colors.purple,
+                        screen: const BudgetScreen(),
+                      ),
+                      const SizedBox(width: 10),
+                      _buildQuickFeatureCard(
+                        context,
+                        title: 'أهدافي',
+                        icon: Icons.track_changes,
+                        color: Colors.orange,
+                        screen: const GoalsScreen(),
+                      ),
+                      const SizedBox(width: 10),
+                      _buildQuickFeatureCard(
+                        context,
+                        title: 'تحدياتي',
+                        icon: Icons.emoji_events,
+                        color: Colors.teal,
+                        screen: const ChallengesScreen(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _buildQuickFeatureCard(
+                        context,
+                        title: 'تقويم الادخار',
+                        icon: Icons.calendar_month,
+                        color: Colors.green,
+                        screen: const NoSpendScreen(),
+                      ),
+                      const SizedBox(width: 10),
+                      _buildQuickFeatureCard(
+                        context,
+                        title: 'حصاد السنة',
+                        icon: Icons.auto_awesome,
+                        color: Colors.amber.shade700,
+                        screen: WrappedScreen(provider: provider),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // GitHub-Style Heat Map
+                  HeatMapWidget(transactions: provider.transactions),
+                  const SizedBox(height: 16),
 
                   // Analytics / Chart Section
                   if (categoryExpenses.isNotEmpty) ...[
@@ -186,18 +441,37 @@ class DashboardScreen extends StatelessWidget {
                       }).toList(),
                     ),
                   ] else ...[
-                    // Empty state funny text
+                    // Empty state funny text (Piggy Bank style)
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
                           children: [
-                            Icon(Icons.monetization_on_outlined, size: 64, color: Colors.orange.shade300),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(40),
+                              child: Image.asset(
+                                'assets/branding/mascot_waiting.png',
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                             const SizedBox(height: 12),
                             const Text(
-                              'مفيش مصاريف متسجلة هذا الشهر! 🥳\nفلوسك في أمان لحد دلوقتي، سجلني قبل ما تاكلني!',
+                              'لسه مفيش مصاريف متسجلة خالص!\nفلوسك في أمان لحد دلوقتي.',
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 16, height: 1.5, fontFamily: 'Amiri'),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                HapticHelper.mediumTap();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                                );
+                              },
+                              child: const Text('سجل أول عملية الآن', style: TextStyle(fontFamily: 'Amiri')),
                             ),
                           ],
                         ),
@@ -214,13 +488,16 @@ class DashboardScreen extends StatelessWidget {
                         'آخر المعاملات',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
                       ),
-                      if (provider.transactions.length > 3)
-                        TextButton(
-                          onPressed: () {
-                            // Can be linked to Tab change in main screen
-                          },
-                          child: const Text('عرض الكل', style: TextStyle(fontFamily: 'Amiri')),
-                        ),
+                      TextButton(
+                        onPressed: () {
+                          HapticHelper.mediumTap();
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+                          );
+                        },
+                        child: const Text('إضافة تفصيلية ➕', style: TextStyle(fontFamily: 'Amiri')),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -272,8 +549,54 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
           ),
-        );
-      },
+        ),
+        ConfettiWidget(
+          show: _showCheckInConfetti,
+          onFinished: () {
+            setState(() {
+              _showCheckInConfetti = false;
+            });
+          },
+        ),
+      ],
+    );
+  },
+);
+  }
+
+  Widget _buildQuickFeatureCard(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Widget screen,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          HapticHelper.mediumTap();
+          Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 6),
+              Text(
+                title,
+                style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 13, fontFamily: 'Amiri'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
