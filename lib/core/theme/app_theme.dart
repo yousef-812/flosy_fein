@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class AppTheme {
   // Brand Design Tokens
@@ -40,16 +41,17 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: const Color(0xFFFBF4DF),
+      scaffoldBackgroundColor: const Color(0xFFF8FAFC), // Modern sleek light slate background
       colorScheme: const ColorScheme.light(
         primary: primaryColor,
         secondary: accentColor,
-        surface: Color(0xFFF4ECD8),
+        surface: Colors.white, // Clean white surface for cards
       ),
       pageTransitionsTheme: pageTransitionsTheme,
       cardTheme: CardThemeData(
-        color: const Color(0xFFF4ECD8),
+        color: Colors.white, // Clean white card background
         elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
         ),
@@ -90,16 +92,17 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       primaryColor: primaryColor,
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: const Color(0xFF0F172A), // Modern deep dark slate background (Tailwind slate-900)
       colorScheme: const ColorScheme.dark(
         primary: primaryColor,
         secondary: accentColor,
-        surface: Color(0xFF1E1E1E),
+        surface: Color(0xFF1E293B), // Sleek slate-800 surface
       ),
       pageTransitionsTheme: pageTransitionsTheme,
       cardTheme: CardThemeData(
-        color: const Color(0xFF1E1E1E),
+        color: const Color(0xFF1E293B), // Sleek slate-800 card background
         elevation: 4,
+        shadowColor: Colors.black.withOpacity(0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
         ),
@@ -118,7 +121,7 @@ class AppTheme {
         fillColor: Colors.white.withOpacity(0.02),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(inputRadius),
-          borderSide: BorderSide(color: Colors.white24),
+          borderSide: const BorderSide(color: Colors.white24),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -126,7 +129,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          color: Colors.white70,
+          color: Colors.white70, // High-contrast clean text
           fontSize: 22,
           fontWeight: FontWeight.bold,
           fontFamily: 'Amiri',
@@ -149,7 +152,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
-          border: const BorderSide(color: Colors.black, width: 2.0),
+          side: const BorderSide(color: Colors.black, width: 2.0),
         ),
       ),
     );
@@ -169,7 +172,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
-          border: const BorderSide(color: Colors.white, width: 2.0),
+          side: const BorderSide(color: Colors.white, width: 2.0),
         ),
       ),
     );

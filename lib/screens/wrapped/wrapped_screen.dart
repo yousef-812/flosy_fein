@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
@@ -246,9 +247,12 @@ class _WrappedScreenState extends State<WrappedScreen> {
                         ElevatedButton.icon(
                           onPressed: () {
                             HapticHelper.successTap();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(languageProvider.translate('saving_wrapped'))),
-                            );
+                            final shareText = "${languageProvider.translate('wrapped_slide0_title')}\n"
+                                "${languageProvider.translate('wrapped_slide3_item1').replaceFirst('{}', '$totalOps')}\n"
+                                "${languageProvider.translate('wrapped_slide3_item2').replaceFirst('{}', topCategory)}\n"
+                                "${languageProvider.translate('wrapped_slide3_item3').replaceFirst('{}', highestTxTitle)}\n\n"
+                                "Foloosy Fein 💰";
+                            Share.share(shareText);
                           },
                           icon: const Icon(Icons.ios_share),
                           label: Text(languageProvider.translate('share_wrapped')),
