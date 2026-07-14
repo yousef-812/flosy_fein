@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/onboarding_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../core/utils/ad_helper.dart';
 import '../../core/utils/haptic_helper.dart';
 import '../../core/utils/audio_helper.dart';
@@ -20,16 +21,28 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final List<String> _currencies = ['ج.م', 'ر.س', 'د.إ', 'د.ك', 'د.أ', 'ج.س', 'دولار'];
 
-  void _upgradeToPremium() async {
+  String _getCurrencyLabel(String key, LanguageProvider lp) {
+    switch (key) {
+      case 'ج.م': return lp.translate('currency_egp');
+      case 'ر.س': return lp.translate('currency_sar');
+      case 'د.إ': return lp.translate('currency_aed');
+      case 'د.ك': return lp.translate('currency_kwd');
+      case 'د.أ': return lp.translate('currency_jod');
+      case 'ج.س': return lp.translate('currency_sdg');
+      case 'دولار': return lp.translate('currency_usd');
+      default: return key;
+    }
+  }
+
+  void _upgradeToPremium(LanguageProvider lp) async {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('ترقية للنسخة الذهبية', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Amiri', fontWeight: FontWeight.bold)),
-          content: const Text(
-            'احصل على تجربة خالية تماماً من الإعلانات لدعم استمرار التطبيق بلمسة واحدة!',
+          title: Text(lp.translate('premium_upgrade_btn'), textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
+          content: Text(
+            lp.translate('premium_upgrade_alert'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: 'Amiri'),
           ),
           actionsAlignment: MainAxisAlignment.center,
           actions: [
@@ -41,19 +54,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {});
                   HapticHelper.successTap();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('مبروك! تم تفعيل النسخة الذهبية وإزالة الإعلانات بنجاح! 🏆', style: TextStyle(fontFamily: 'Amiri')),
+                    SnackBar(
+                      content: Text(lp.translate('premium_success_msg')),
                       backgroundColor: Colors.amber,
                     ),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-              child: const Text('شراء الآن (محاكاة)', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+              child: Text(lp.translate('premium_buy_mock'), style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Amiri')),
+              child: Text(lp.translate('cancel')),
             ),
           ],
         );
@@ -66,10 +79,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final transactionProvider = Provider.of<TransactionProvider>(context);
     final onboardingProvider = Provider.of<OnboardingProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإعدادات العامة', style: TextStyle(fontFamily: 'Amiri')),
+        title: Text(languageProvider.translate('settings')),
         centerTitle: true,
       ),
       body: ListView(
@@ -86,37 +100,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
-                      SizedBox(width: 8),
+                      const Icon(Icons.workspace_premium, color: Colors.amber, size: 28),
+                      const SizedBox(width: 8),
                       Text(
-                        'العضوية الذهبية (Premium)',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Amiri', color: Colors.amber),
+                        languageProvider.translate('premium_title'),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     AdHelper.isPremiumUser
-                        ? 'أنت عضو ذهبي الآن! تم إيقاف جميع الإعلانات مدى الحياة! 🏆'
-                        : 'تخلص من الإعلانات البينية والبنرات المزعجة بلمسة واحدة مدى الحياة.',
+                        ? languageProvider.translate('premium_body_active')
+                        : languageProvider.translate('premium_body_inactive'),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, fontFamily: 'Amiri'),
+                    style: const TextStyle(fontSize: 14),
                   ),
                   if (!AdHelper.isPremiumUser) ...[
                     const SizedBox(height: 16),
                     ElevatedButton(
-                      onPressed: _upgradeToPremium,
+                      onPressed: () => _upgradeToPremium(languageProvider),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amber,
                         foregroundColor: Colors.black87,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text(
-                        'شراء النسخة الذهبية 🚀',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                      child: Text(
+                        languageProvider.translate('premium_upgrade_alert_btn'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -126,16 +140,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 24),
 
-          const Text(
-            'التفضيلات العامة',
-            style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+          Text(
+            languageProvider.translate('general_preferences'),
+            style: const TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
 
           // Theme Toggle
           Card(
             child: SwitchListTile(
-              title: const Text('الوضع الداكن (Dark Mode)', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              title: Text(languageProvider.translate('dark_mode'), style: const TextStyle(fontSize: 18)),
               value: themeProvider.isDarkMode,
               onChanged: (value) {
                 HapticHelper.lightTap();
@@ -148,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Sound Toggle
           Card(
             child: SwitchListTile(
-              title: const Text('الأصوات التفاعلية (Cash Sound)', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              title: Text(languageProvider.translate('interactive_sounds'), style: const TextStyle(fontSize: 18)),
               value: AudioHelper.isSoundEnabled,
               onChanged: (value) {
                 HapticHelper.lightTap();
@@ -163,14 +177,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Currency Selector
           Card(
             child: ListTile(
-              title: const Text('العملة المفضلة', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              title: Text(languageProvider.translate('preferred_currency'), style: const TextStyle(fontSize: 18)),
               trailing: DropdownButton<String>(
                 value: transactionProvider.preferredCurrency,
                 underline: const SizedBox(),
                 items: _currencies.map((curr) {
                   return DropdownMenuItem<String>(
                     value: curr,
-                    child: Text(curr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: Text(_getCurrencyLabel(curr, languageProvider), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -184,10 +198,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 8),
 
+          // Language Selector Dropdown
+          Card(
+            child: ListTile(
+              title: Text(languageProvider.translate('app_language'), style: const TextStyle(fontSize: 18)),
+              trailing: DropdownButton<String>(
+                value: languageProvider.currentLanguage,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem<String>(
+                    value: 'ar',
+                    child: Text('العربية (Arabic)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                  DropdownMenuItem<String>(
+                    value: 'en',
+                    child: Text('English', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    HapticHelper.lightTap();
+                    languageProvider.changeLanguage(value);
+                  }
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
           // Reset Onboarding Option
           Card(
             child: ListTile(
-              title: const Text('بدء الترحيب والتهيئة من جديد', style: TextStyle(fontFamily: 'Amiri', fontSize: 18)),
+              title: Text(languageProvider.translate('reset_onboarding'), style: const TextStyle(fontSize: 18)),
               trailing: const Icon(Icons.restart_alt, color: Colors.orange),
               onTap: () async {
                 HapticHelper.heavyTap();
@@ -205,25 +247,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
 
           // Widget Preview Section
-          const Text(
-            'معاينة ويدجت الشاشة الرئيسية',
-            style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+          Text(
+            languageProvider.translate('widget_preview_title'),
+            style: const TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Center(child: WidgetPreview(provider: transactionProvider)),
           const SizedBox(height: 24),
 
           // About App Info
-          const Column(
+          Column(
             children: [
               Text(
-                'تطبيق فلوسي فين - النسخة 1.1.0',
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+                languageProvider.translate('app_version'),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
-                '« سجلني قبل ما تاكلني »',
-                style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic, fontFamily: 'Amiri'),
+                languageProvider.translate('tagline'),
+                style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
           )

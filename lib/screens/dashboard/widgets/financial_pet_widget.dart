@@ -161,7 +161,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
                             ),
                             child: Text(
                               petMood,
-                              style: TextStyle(fontSize: 10, color: moodColor.shade700, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                              style: TextStyle(fontSize: 10, color: moodColor, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
                             ),
                           ),
                         ],

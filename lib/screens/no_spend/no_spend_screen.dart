@@ -176,7 +176,7 @@ class NoSpendScreen extends StatelessWidget {
                         '$dayNumber',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isFuture ? Colors.grey : cellColor.shade700,
+                          color: isFuture ? Colors.grey : (cellColor == Colors.green ? Colors.green.shade700 : Colors.red.shade700),
                         ),
                       ),
                     );

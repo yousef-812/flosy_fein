@@ -222,7 +222,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.target, size: 64, color: Colors.grey.shade400),
+                        Icon(Icons.track_changes, size: 64, color: Colors.grey.shade400),
                         const SizedBox(height: 16),
                         const Text(
                           "مفيش أهداف ادخار مسجلة!\nحدد هدفك الآن ووفر فلوسك عشان تحققه 🎯",

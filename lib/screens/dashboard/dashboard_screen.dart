@@ -16,6 +16,7 @@ import 'balance_details_screen.dart';
 import '../no_spend/no_spend_screen.dart';
 import '../wrapped/wrapped_screen.dart';
 import '../../providers/gamification_provider.dart';
+import '../../providers/language_provider.dart';
 import '../shop/streak_shop_screen.dart';
 import 'widgets/financial_pet_widget.dart';
 import '../../widgets/confetti_widget.dart';
@@ -47,6 +48,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final languageProvider = Provider.of<LanguageProvider>(context);
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
         final currency = provider.preferredCurrency;
@@ -123,33 +125,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'قصتي الشهرية',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Amiri'),
+                            Text(
+                              languageProvider.translate('monthly_story'),
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                       ),
                       
                       // Title
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            'فلوسي فين',
-                            style: TextStyle(
+                            languageProvider.translate('app_name'),
+                            style: const TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Amiri',
                               color: Color(0xFF1E88E5),
                             ),
                           ),
                           Text(
-                            '« سجلني قبل ما تاكلني »',
-                            style: TextStyle(
+                            languageProvider.translate('tagline'),
+                            style: const TextStyle(
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
-                              fontFamily: 'Amiri',
                               color: Colors.grey,
                             ),
                           ),
@@ -221,13 +221,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             borderRadius: BorderRadius.circular(8),
                             child: Image.asset('assets/branding/gift.png', width: 36, height: 36, fit: BoxFit.cover),
                           ),
-                          title: const Text(
-                            'مكافأة تسجيل الدخول اليومي! 🎉',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Amiri', fontSize: 15),
+                          title: Text(
+                            languageProvider.translate('daily_checkin_title'),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                           ),
-                          subtitle: const Text(
-                            'احصل على 10 عملات مجانية لمجرد فتح التطبيق اليوم.',
-                            style: TextStyle(fontFamily: 'Amiri', fontSize: 12),
+                          subtitle: Text(
+                            languageProvider.translate('daily_checkin_desc'),
+                            style: const TextStyle(fontSize: 12),
                           ),
                           trailing: ElevatedButton(
                             onPressed: () async {
@@ -235,15 +235,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               if (success) {
                                 _triggerCheckInConfetti();
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('🎉 تم استلام 10 عملات مجانية بنجاح!', style: TextStyle(fontFamily: 'Amiri')),
+                                  SnackBar(
+                                    content: Text(languageProvider.translate('claim_success')),
                                     backgroundColor: Colors.amber,
                                   ),
                                 );
                               }
                             },
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                            child: const Text('استلام', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontFamily: 'Amiri')),
+                            child: Text(
+                              languageProvider.translate('claim'),
+                              style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ),
                       );
