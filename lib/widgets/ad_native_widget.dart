@@ -31,8 +31,8 @@ class _AdNativeWidgetState extends State<AdNativeWidget> {
     if (adUnitId.isEmpty) return;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF4ECD8);
-    final textColor = isDark ? Colors.white70 : Colors.black87;
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? (isDark ? Colors.white70 : Colors.black87);
 
     _nativeAd = NativeAd(
       adUnitId: adUnitId,
@@ -91,10 +91,10 @@ class _AdNativeWidgetState extends State<AdNativeWidget> {
       height: 135, // 135px height completely avoids 'Advertiser assets outside native ad view'
       margin: const EdgeInsets.only(bottom: 16.0),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF4ECD8),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.grey.withOpacity(0.1) : Colors.grey.withOpacity(0.3),
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1),
         ),
       ),
       child: AdWidget(ad: _nativeAd!),
