@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
+import '../../widgets/ad_banner_widget.dart';
 import 'widgets/heat_map_widget.dart';
 import '../budget/budget_screen.dart';
 
@@ -39,17 +40,22 @@ class AnalysisScreen extends StatelessWidget {
           final hasData = categoryExpenses.isNotEmpty;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. Monthly Expense Breakdown Card (Pie Chart)
                 Text(
                   languageProvider.translate('monthly_analysis'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: hasData
@@ -73,7 +79,7 @@ class AnalysisScreen extends StatelessWidget {
                                         title: '${percentage.toStringAsFixed(0)}%',
                                         radius: 20,
                                         titleStyle: const TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -97,14 +103,14 @@ class AnalysisScreen extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Container(
-                                        width: 12,
-                                        height: 12,
+                                        width: 10,
+                                        height: 10,
                                         decoration: BoxDecoration(color: category.color, shape: BoxShape.circle),
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         languageProvider.translateCategory(catName),
-                                        style: const TextStyle(fontSize: 12),
+                                        style: const TextStyle(fontSize: 11),
                                       ),
                                     ],
                                   );
@@ -117,7 +123,7 @@ class AnalysisScreen extends StatelessWidget {
                             alignment: Alignment.center,
                             child: Text(
                               languageProvider.translate('no_transactions_yet'),
-                              style: const TextStyle(color: Colors.grey),
+                              style: const TextStyle(color: Colors.grey, fontSize: 13),
                             ),
                           ),
                   ),
@@ -127,9 +133,9 @@ class AnalysisScreen extends StatelessWidget {
                 // 2. Spending Activity Heat Map
                 Text(
                   languageProvider.translate('activity_map'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 HeatMapWidget(transactions: provider.transactions),
                 const SizedBox(height: 20),
 
@@ -139,11 +145,14 @@ class AnalysisScreen extends StatelessWidget {
                   children: [
                     Text(
                       languageProvider.translate('budgets'),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     TextButton.icon(
-                      icon: const Icon(Icons.edit, size: 16),
-                      label: Text(languageProvider.translate('budgets')),
+                      icon: const Icon(Icons.edit, size: 14),
+                      label: Text(
+                        languageProvider.translate('budgets'),
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -157,6 +166,11 @@ class AnalysisScreen extends StatelessWidget {
 
                 if (provider.budgets.isEmpty)
                   Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Column(
@@ -166,7 +180,7 @@ class AnalysisScreen extends StatelessWidget {
                           Text(
                             languageProvider.translate('no_budgets_msg'),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.grey, height: 1.4),
+                            style: const TextStyle(color: Colors.grey, height: 1.4, fontSize: 13),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
@@ -203,7 +217,12 @@ class AnalysisScreen extends StatelessWidget {
                     }
 
                     return Card(
+                      elevation: 0,
                       margin: const EdgeInsets.only(bottom: 12.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -211,16 +230,16 @@ class AnalysisScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(category.icon, color: category.color),
+                                Icon(category.icon, color: category.color, size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   languageProvider.translateCategory(budget.categoryName),
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                                 ),
                                 const Spacer(),
                                 Text(
                                   '${budget.spentAmount.toStringAsFixed(0)} / ${budget.limitAmount.toStringAsFixed(0)} $currency',
-                                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -230,7 +249,7 @@ class AnalysisScreen extends StatelessWidget {
                               child: LinearProgressIndicator(
                                 value: percent,
                                 color: progressColor,
-                                backgroundColor: Colors.grey.withOpacity(0.2),
+                                backgroundColor: Colors.grey.withOpacity(0.15),
                                 minHeight: 8,
                               ),
                             ),
@@ -239,6 +258,10 @@ class AnalysisScreen extends StatelessWidget {
                       ),
                     );
                   }),
+
+                const SizedBox(height: 16),
+                // 4. Banner Ad in Analysis tab
+                const AdBannerWidget(),
               ],
             ),
           );

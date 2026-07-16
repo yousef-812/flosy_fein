@@ -10,6 +10,7 @@ import '../../core/utils/audio_helper.dart';
 import '../../main.dart';
 import '../onboarding/onboarding_screen.dart';
 import '../../widgets/widget_preview.dart';
+import '../../widgets/ad_banner_widget.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -268,7 +269,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
-          )
+          ),
+          const SizedBox(height: 20),
+          const AdBannerWidget(),
         ],
       ),
     );

@@ -6,6 +6,7 @@ import '../../providers/gamification_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../widgets/confetti_widget.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../../core/utils/haptic_helper.dart';
 import '../../core/utils/ad_helper.dart';
 import 'widgets/financial_pet_widget.dart';
@@ -117,7 +118,7 @@ class _GamificationScreenState extends State<GamificationScreen> {
             ],
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -128,10 +129,11 @@ class _GamificationScreenState extends State<GamificationScreen> {
                 // 2. Daily Check-in Card (Shown only if available)
                 if (gamification.canCheckInToday) ...[
                   Card(
-                    color: Colors.amber.withOpacity(0.15),
+                    elevation: 0,
+                    color: Colors.amber.withOpacity(0.12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: const BorderSide(color: Colors.amber, width: 2),
+                      side: const BorderSide(color: Colors.amber, width: 1.5),
                     ),
                     child: ListTile(
                       leading: ClipRRect(
@@ -140,11 +142,11 @@ class _GamificationScreenState extends State<GamificationScreen> {
                       ),
                       title: Text(
                         languageProvider.translate('daily_checkin_title'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       subtitle: Text(
                         languageProvider.translate('daily_checkin_desc'),
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 11, color: Colors.black54),
                       ),
                       trailing: ElevatedButton(
                         onPressed: () {
@@ -180,10 +182,14 @@ class _GamificationScreenState extends State<GamificationScreen> {
                             performClaim();
                           }
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
                         child: Text(
                           languageProvider.translate('claim'),
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
                     ),
@@ -191,10 +197,10 @@ class _GamificationScreenState extends State<GamificationScreen> {
                   const SizedBox(height: 16),
                 ],
 
-                // 3. Play Navigation Sections / Feature Cards
+                // 3. Play Navigation Sections
                 Text(
                   languageProvider.translate('challenges_title'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
 
@@ -248,6 +254,10 @@ class _GamificationScreenState extends State<GamificationScreen> {
                   color: Colors.amber.shade700,
                   screen: const StreakShopScreen(),
                 ),
+
+                const SizedBox(height: 16),
+                // 4. Banner Ad in Gamification tab
+                const AdBannerWidget(),
               ],
             ),
           ),
@@ -273,6 +283,11 @@ class _GamificationScreenState extends State<GamificationScreen> {
     required Widget screen,
   }) {
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+      ),
       child: InkWell(
         onTap: () {
           HapticHelper.mediumTap();
@@ -284,12 +299,12 @@ class _GamificationScreenState extends State<GamificationScreen> {
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: color, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -298,17 +313,17 @@ class _GamificationScreenState extends State<GamificationScreen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
             ],
           ),
         ),

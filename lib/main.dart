@@ -25,6 +25,7 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/quick_add_sheet.dart';
 import 'core/utils/audio_helper.dart';
+import 'core/utils/haptic_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -149,8 +150,12 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     AnalysisScreen(),
     GamificationScreen(),
     TransactionHistoryScreen(),
-    SettingsScreen(),
   ];
+
+  int _getNavSelectedIndex(int screenIndex) {
+    if (screenIndex <= 1) return screenIndex;
+    return screenIndex + 1; // Skip index 2 (Quick Add CTA)
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,11 +164,23 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: _getNavSelectedIndex(_currentIndex),
         onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          if (index == 2) {
+            HapticHelper.mediumTap();
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              builder: (context) => const QuickAddSheet(),
+            );
+          } else {
+            setState(() {
+              _currentIndex = index < 2 ? index : index - 1;
+            });
+          }
         },
         destinations: [
           NavigationDestination(
@@ -176,6 +193,26 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             selectedIcon: const Icon(Icons.analytics),
             label: languageProvider.translate('analysis_nav'),
           ),
+          // Symmetrical central Quick Add Button
+          NavigationDestination(
+            icon: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 30),
+            ),
+            selectedIcon: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add_circle, color: Colors.white, size: 30),
+            ),
+            label: languageProvider.translate('quick_add_title'),
+          ),
           NavigationDestination(
             icon: const Icon(Icons.sports_esports_outlined),
             selectedIcon: const Icon(Icons.sports_esports),
@@ -186,30 +223,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             selectedIcon: const Icon(Icons.history),
             label: languageProvider.translate('history_nav'),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: languageProvider.translate('settings'),
-          ),
         ],
       ),
-      floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                // Show Quick Add Sheet
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (context) => const QuickAddSheet(),
-                );
-              },
-              backgroundColor: const Color(0xFF1E88E5),
-              child: const Icon(Icons.bolt, color: Colors.white),
-            )
-          : null,
     );
   }
 }

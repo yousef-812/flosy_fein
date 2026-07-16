@@ -7,6 +7,7 @@ import '../../models/category_model.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/spending_story_widget.dart';
 import '../transaction/add_transaction_screen.dart';
+import '../settings/settings_screen.dart';
 import 'widgets/insight_card.dart';
 import 'widgets/animated_counter.dart';
 import 'balance_details_screen.dart';
@@ -59,20 +60,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _triggerCheckInConfetti() {
-    setState(() {
-      _showCheckInConfetti = true;
-    });
-    HapticHelper.successTap();
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _showCheckInConfetti = false;
-        });
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
@@ -89,86 +76,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Scaffold(
               body: SafeArea(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // App Title & Tagline & Instagram-like Story Circle
+                      // 1. App Bar Header (Settings, Title, Coins)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Story Circle (Fixed collapsed bug)
-                          GestureDetector(
-                            onTap: () {
-                              HapticHelper.mediumTap();
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => SpendingStoryWidget(provider: provider),
-                                ),
-                              );
-                            },
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 65,
-                                  height: 65,
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [Colors.purple, Colors.pink, Colors.orange, Colors.yellow],
-                                      begin: Alignment.topRight,
-                                      end: Alignment.bottomLeft,
-                                    ),
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).cardColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: ClipOval(
-                                      child: Image.asset(
-                                        'assets/branding/mascot_happy.jpg',
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  languageProvider.translate('monthly_story'),
-                                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          // Title
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                languageProvider.translate('app_name'),
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1E88E5),
-                                ),
-                              ),
-                              Text(
-                                languageProvider.translate('tagline'),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          // Coins balance button
+                          // Left Side: Coins Pill
                           Consumer<GamificationProvider>(
                             builder: (context, gamification, child) {
                               return GestureDetector(
@@ -183,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: Colors.amber.withOpacity(0.12),
-                                    border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                                    border: Border.all(color: Colors.amber.withOpacity(0.4)),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Row(
@@ -203,18 +119,144 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               );
                             }
                           ),
+                          
+                          // Center: App Title
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Text(
+                                languageProvider.translate('app_name'),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF1E88E5),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              Text(
+                                languageProvider.translate('tagline'),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Right Side: Settings Icon Button
+                          IconButton(
+                            icon: const Icon(Icons.settings_outlined, color: Colors.grey, size: 24),
+                            onPressed: () {
+                              HapticHelper.mediumTap();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                              );
+                            },
+                          ),
                         ],
                       ),
                       const SizedBox(height: 16),
 
-                      // "Foloos" Personality Bubble & Daily Insight
+                      // 2. Symmetrical Actions Row: Story Circle & Streaks
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          // Story Circle (Fixed size and content)
+                          GestureDetector(
+                            onTap: () {
+                              HapticHelper.mediumTap();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SpendingStoryWidget(provider: provider),
+                                ),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  padding: const EdgeInsets.all(2.5),
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: LinearGradient(
+                                      colors: [Colors.purple, Colors.pink, Colors.orange, Colors.yellow],
+                                      begin: Alignment.topRight,
+                                      end: Alignment.bottomLeft,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(1.5),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).cardColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: ClipOval(
+                                      child: Image.asset(
+                                        'assets/branding/mascot_happy.jpg',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  languageProvider.translate('monthly_story'),
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Vertical Divider
+                          Container(height: 24, width: 1, color: Colors.grey.withOpacity(0.2)),
+
+                          // Savings Streak
+                          Consumer<GamificationProvider>(
+                            builder: (context, gamification, child) {
+                              return Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 22),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        languageProvider.translate('current_streak'),
+                                        style: const TextStyle(fontSize: 9, color: Colors.grey),
+                                      ),
+                                      Text(
+                                        '${gamification.currentStreak} ${languageProvider.translate('days')}',
+                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              );
+                            }
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 3. Unified Mascot Tip & Insight Card
                       InsightCard(
                         transactions: provider.transactions,
                         currency: currency,
                       ),
                       const SizedBox(height: 16),
 
-                      // Total Balance Card with Hero & Transition
+                      // 4. Total Balance Card (Restructured)
                       GestureDetector(
                         onTap: () {
                           HapticHelper.mediumTap();
@@ -226,25 +268,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Hero(
                           tag: 'balance_card_hero',
                           child: Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: Colors.grey.withOpacity(0.15)),
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.all(20.0),
+                              padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 children: [
                                   Text(
                                     languageProvider.translate('remaining_balance_label'),
-                                    style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                    style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   AnimatedCounter(
                                     value: balance,
                                     style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color: balance >= 0 ? Colors.green : Colors.red,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                      color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
                                     ),
                                     suffix: currency,
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 16),
+                                  const Divider(height: 1),
+                                  const SizedBox(height: 16),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                                     children: [
@@ -252,36 +301,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(Icons.arrow_downward, color: Colors.green, size: 16),
+                                              const Icon(Icons.arrow_downward, color: Colors.green, size: 14),
                                               const SizedBox(width: 4),
                                               Text(
                                                 languageProvider.translate('income_month_label'),
-                                                style: const TextStyle(color: Colors.grey),
+                                                style: const TextStyle(color: Colors.grey, fontSize: 11),
                                               ),
                                             ],
                                           ),
+                                          const SizedBox(height: 2),
                                           Text(
-                                            '+${income.toStringAsFixed(2)} $currency',
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                                            '+${income.toStringAsFixed(0)} $currency',
+                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green),
                                           ),
                                         ],
                                       ),
-                                      Container(height: 30, width: 1, color: Colors.grey.withOpacity(0.3)),
+                                      Container(height: 24, width: 1, color: Colors.grey.withOpacity(0.2)),
                                       Column(
                                         children: [
                                           Row(
                                             children: [
-                                              const Icon(Icons.arrow_upward, color: Colors.red, size: 16),
+                                              const Icon(Icons.arrow_upward, color: Colors.red, size: 14),
                                               const SizedBox(width: 4),
                                               Text(
                                                 languageProvider.translate('expenses_label'),
-                                                style: const TextStyle(color: Colors.grey),
+                                                style: const TextStyle(color: Colors.grey, fontSize: 11),
                                               ),
                                             ],
                                           ),
+                                          const SizedBox(height: 2),
                                           Text(
-                                            '-${expenses.toStringAsFixed(2)} $currency',
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+                                            '-${expenses.toStringAsFixed(0)} $currency',
+                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red),
                                           ),
                                         ],
                                       ),
@@ -293,15 +344,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      // Recent Transactions Header
+                      // 5. Recent Transactions Section
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             languageProvider.translate('recent_transactions'),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           TextButton(
                             onPressed: () {
@@ -311,15 +362,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
                               );
                             },
-                            child: Text(languageProvider.translate('add_detailed_btn')),
+                            child: Text(
+                              languageProvider.translate('add_detailed_btn'),
+                              style: const TextStyle(fontSize: 12),
+                            ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
 
-                      // Recent Transactions List (At most 3 items)
+                      // List Items (Restructured Cards)
                       if (provider.transactions.isEmpty)
                         Card(
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(24.0),
                             child: Column(
@@ -328,8 +387,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   borderRadius: BorderRadius.circular(40),
                                   child: Image.asset(
                                     'assets/branding/mascot_waiting.jpg',
-                                    width: 80,
-                                    height: 80,
+                                    width: 70,
+                                    height: 70,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -337,7 +396,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 Text(
                                   languageProvider.translate('empty_state_msg'),
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 16, height: 1.5),
+                                  style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.grey),
                                 ),
                                 const SizedBox(height: 16),
                                 ElevatedButton(
@@ -361,31 +420,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             orElse: () => CategoryModel(name: tx.categoryName, icon: Icons.help, color: Colors.grey),
                           );
                           return Card(
+                            elevation: 0,
                             margin: const EdgeInsets.only(bottom: 8.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                            ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: category.color.withOpacity(0.2),
-                                child: Icon(category.icon, color: category.color),
+                                backgroundColor: category.color.withOpacity(0.15),
+                                child: Icon(category.icon, color: category.color, size: 20),
                               ),
-                              title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               subtitle: Text(
                                 '${tx.date.day}/${tx.date.month}/${tx.date.year}',
-                                style: const TextStyle(fontSize: 12),
+                                style: const TextStyle(fontSize: 11, color: Colors.grey),
                               ),
                               trailing: Text(
-                                '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
+                                '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(0)} $currency',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: tx.isExpense ? Colors.red : Colors.green,
-                                  fontSize: 16,
+                                  color: tx.isExpense ? Colors.red.shade700 : Colors.green.shade700,
+                                  fontSize: 15,
                                 ),
                               ),
                             ),
                           );
                         }),
                       
-                      const SizedBox(height: 20),
-                      // Banner Ad at the bottom of dashboard
+                      const SizedBox(height: 16),
+                      // 6. Banner Ad at the bottom
                       const AdBannerWidget(),
                     ],
                   ),

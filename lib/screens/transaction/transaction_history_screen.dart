@@ -6,6 +6,7 @@ import '../../providers/language_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../models/category_model.dart';
 import '../../widgets/ad_native_widget.dart';
+import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/utils/haptic_helper.dart';
 
@@ -211,7 +212,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             }
           }
 
-          // 2. Month filter (e.g. "فبراير")
+          // 2. Month filter
           final monthIndex = _parseArabicMonth(_searchQuery);
           if (monthIndex != null) {
             return tx.date.month == monthIndex;
@@ -258,16 +259,19 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<int>(
+                    style: SegmentedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                    ),
                     segments: [
                       ButtonSegment<int>(
                         value: 0,
-                        icon: const Icon(Icons.list),
-                        label: Text(languageProvider.translate('history_calendar_toggle_list')),
+                        icon: const Icon(Icons.list, size: 18),
+                        label: Text(languageProvider.translate('history_calendar_toggle_list'), style: const TextStyle(fontSize: 12)),
                       ),
                       ButtonSegment<int>(
                         value: 1,
-                        icon: const Icon(Icons.calendar_month),
-                        label: Text(languageProvider.translate('history_calendar_toggle_cal')),
+                        icon: const Icon(Icons.calendar_month, size: 18),
+                        label: Text(languageProvider.translate('history_calendar_toggle_cal'), style: const TextStyle(fontSize: 12)),
                       ),
                     ],
                     selected: {_viewMode},
@@ -285,15 +289,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               if (_viewMode == 0) ...[
                 // Search Input Field
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: languageProvider.translate('search_history_hint'),
-                      prefixIcon: const Icon(Icons.search),
+                      prefixIcon: const Icon(Icons.search, size: 20),
                       suffixIcon: _searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear),
+                              icon: const Icon(Icons.clear, size: 18),
                               onPressed: () {
                                 _searchController.clear();
                                 setState(() {
@@ -302,7 +306,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               },
                             )
                           : null,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                     ),
                     onChanged: (value) {
@@ -315,22 +319,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
                 // Filter Chips
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       FilterChip(
-                        label: Text(languageProvider.translate('all_filter')),
+                        label: Text(languageProvider.translate('all_filter'), style: const TextStyle(fontSize: 12)),
                         selected: _filterIndex == 0,
                         onSelected: (_) => setState(() => _filterIndex = 0),
                       ),
                       FilterChip(
-                        label: Text(languageProvider.translate('expenses_filter'), style: const TextStyle(color: Colors.red)),
+                        label: Text(languageProvider.translate('expenses_filter'), style: const TextStyle(color: Colors.red, fontSize: 12)),
                         selected: _filterIndex == 1,
                         onSelected: (_) => setState(() => _filterIndex = 1),
                       ),
                       FilterChip(
-                        label: Text(languageProvider.translate('income_filter'), style: const TextStyle(color: Colors.green)),
+                        label: Text(languageProvider.translate('income_filter'), style: const TextStyle(color: Colors.green, fontSize: 12)),
                         selected: _filterIndex == 2,
                         onSelected: (_) => setState(() => _filterIndex = 2),
                       ),
@@ -346,11 +350,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                           ? Center(
                               child: Text(
                                 languageProvider.translate('no_matching_txs'),
-                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                                style: const TextStyle(fontSize: 14, color: Colors.grey),
                               ),
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                               itemCount: itemsWithAds.length,
                               itemBuilder: (context, index) {
                                 final item = itemsWithAds[index];
@@ -409,23 +413,28 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                     }
                                   },
                                   child: Card(
+                                    elevation: 0,
                                     margin: const EdgeInsets.only(bottom: 8.0),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                                    ),
                                     child: ListTile(
                                       leading: CircleAvatar(
-                                        backgroundColor: category.color.withOpacity(0.2),
-                                        child: Icon(category.icon, color: category.color),
+                                        backgroundColor: category.color.withOpacity(0.15),
+                                        child: Icon(category.icon, color: category.color, size: 20),
                                       ),
-                                      title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                                       subtitle: Text(
                                         '${tx.date.day}/${tx.date.month}/${tx.date.year}',
-                                        style: const TextStyle(fontSize: 12),
+                                        style: const TextStyle(fontSize: 11, color: Colors.grey),
                                       ),
                                       trailing: Text(
-                                        '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
+                                        '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(0)} $currency',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: tx.isExpense ? Colors.red : Colors.green,
-                                          fontSize: 16,
+                                          color: tx.isExpense ? Colors.red.shade700 : Colors.green.shade700,
+                                          fontSize: 15,
                                         ),
                                       ),
                                       onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
@@ -441,12 +450,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               if (_viewMode == 1) ...[
                 // Month Selector Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios),
+                        icon: const Icon(Icons.arrow_back_ios, size: 18),
                         onPressed: () {
                           HapticHelper.lightTap();
                           setState(() {
@@ -456,10 +465,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       ),
                       Text(
                         '${languageProvider.translate('month_${_calendarSelectedDate.month}')} ${_calendarSelectedDate.year}',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.arrow_forward_ios),
+                        icon: const Icon(Icons.arrow_forward_ios, size: 18),
                         onPressed: () {
                           HapticHelper.lightTap();
                           setState(() {
@@ -473,21 +482,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
                 // Weekdays Labels
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text(languageProvider.translate('day_sun'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_mon'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_tue'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_wed'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_thu'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_fri'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
-                      Text(languageProvider.translate('day_sat'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_sun'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_mon'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_tue'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_wed'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_thu'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_fri'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
+                      Text(languageProvider.translate('day_sat'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 11)),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
 
                 // Days Grid
                 Padding(
@@ -499,7 +508,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       crossAxisCount: 7,
                       mainAxisSpacing: 6,
                       crossAxisSpacing: 6,
-                      childAspectRatio: 1.1,
+                      childAspectRatio: 1.15,
                     ),
                     itemCount: daysInMonth + startOffset,
                     itemBuilder: (context, index) {
@@ -552,7 +561,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                 '$dayNumber',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 13,
+                                  fontSize: 12,
                                   color: isSelected
                                       ? Colors.white
                                       : Theme.of(context).textTheme.bodyLarge?.color,
@@ -575,37 +584,37 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                     },
                   ),
                 ),
-                const Divider(height: 24),
+                const Divider(height: 20),
 
                 // Selected Day Header Details
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 2.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         languageProvider.translate('day_details')
                             .replaceFirst('{}', '${_calendarSelectedDate.day}/${_calendarSelectedDate.month}/${_calendarSelectedDate.year}'),
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       Row(
                         children: [
                           if (dayIncome > 0)
                             Text(
                               '+${dayIncome.toStringAsFixed(0)} $currency ',
-                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
                             ),
                           if (dayExpense > 0)
                             Text(
                               '-${dayExpense.toStringAsFixed(0)} $currency',
-                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13),
+                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
                             ),
                         ],
                       )
                     ],
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
 
                 // Selected Day Transaction List
                 Expanded(
@@ -613,7 +622,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       ? Center(
                           child: Text(
                             languageProvider.translate('no_transactions_today'),
-                            style: const TextStyle(color: Colors.grey),
+                            style: const TextStyle(color: Colors.grey, fontSize: 13),
                           ),
                         )
                       : ListView.builder(
@@ -638,18 +647,24 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                 _deleteWithUndo(context, tx, provider, languageProvider);
                               },
                               child: Card(
+                                elevation: 0,
                                 margin: const EdgeInsets.only(bottom: 8.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                                ),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: category.color.withOpacity(0.2),
-                                    child: Icon(category.icon, color: category.color),
+                                    backgroundColor: category.color.withOpacity(0.15),
+                                    child: Icon(category.icon, color: category.color, size: 20),
                                   ),
-                                  title: Text(tx.title),
+                                  title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                                   trailing: Text(
-                                    '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
+                                    '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(0)} $currency',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: tx.isExpense ? Colors.red : Colors.green,
+                                      color: tx.isExpense ? Colors.red.shade700 : Colors.green.shade700,
+                                      fontSize: 15,
                                     ),
                                   ),
                                   onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
@@ -660,6 +675,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         ),
                 ),
               ],
+
+              // 4. Always show Banner Ad at the bottom of History Screen
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8.0),
+                child: AdBannerWidget(),
+              ),
             ],
           ),
         );
@@ -672,9 +693,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       itemCount: 6,
       itemBuilder: (context, index) {
-        return const Card(
-          margin: EdgeInsets.only(bottom: 8.0),
-          child: Padding(
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 8.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.withOpacity(0.12)),
+          ),
+          child: const Padding(
             padding: EdgeInsets.all(16.0),
             child: Row(
               children: [

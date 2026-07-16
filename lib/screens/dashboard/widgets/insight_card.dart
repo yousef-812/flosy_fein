@@ -64,85 +64,93 @@ class _InsightCardState extends State<InsightCard> {
     _insights = PersonalityHelper.getDailyInsights(widget.transactions, widget.currency, languageProvider.currentLanguage);
     final quote = PersonalityHelper.getFunnyQuote(widget.transactions, languageProvider.currentLanguage);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 1. "Foloos" Personality Bubble
-        Card(
-          color: Colors.blue.withOpacity(0.08),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.blue.withOpacity(0.2)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.blue.withOpacity(0.15), width: 1.2),
+      ),
+      elevation: 0,
+      color: Colors.blue.withOpacity(0.04),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header Row
+            Row(
               children: [
-                // Mascot Emoji or Avatar
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Text('💰', style: TextStyle(fontSize: 32)),
-                ),
-                const SizedBox(width: 16),
-                // Bubble Text
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${languageProvider.translate("pet_name")}:',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E88E5),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        quote,
-                        style: const TextStyle(fontSize: 15, height: 1.4),
-                      ),
-                    ],
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    'assets/branding/mascot_happy.jpg',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
                   ),
                 ),
+                const SizedBox(width: 10),
+                Text(
+                  languageProvider.translate('pet_name'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E88E5),
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
               ],
             ),
-          ),
-        ),
-        const SizedBox(height: 12),
+            const SizedBox(height: 12),
+            const Divider(height: 1, color: Colors.blue24),
+            const SizedBox(height: 12),
 
-        // 2. Daily Insight Slides Card
-        if (_insights.isNotEmpty)
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                children: [
-                  const Icon(Icons.lightbulb_outline, color: Colors.amber),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      child: Text(
-                        _insights[_currentInsightIndex],
-                        key: ValueKey<int>(_currentInsightIndex),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          height: 1.4,
+            // Mascot Quote Text
+            Text(
+              quote,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+
+            // Animated Insight Slider
+            if (_insights.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.blue.withOpacity(0.08)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('🔮 ', style: TextStyle(fontSize: 14)),
+                    Expanded(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        child: Text(
+                          _insights[_currentInsightIndex],
+                          key: ValueKey<int>(_currentInsightIndex),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            height: 1.4,
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.85),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
-      ],
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
