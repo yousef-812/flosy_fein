@@ -4,6 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
 import '../../providers/transaction_provider.dart';
 import '../../models/category_model.dart';
+import '../../models/transaction_model.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/spending_story_widget.dart';
 import '../transaction/add_transaction_screen.dart';
