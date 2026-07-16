@@ -9,6 +9,7 @@ import '../../widgets/confetti_widget.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../../core/utils/haptic_helper.dart';
 import '../../core/utils/ad_helper.dart';
+import '../../core/utils/notification_helper.dart';
 import 'widgets/financial_pet_widget.dart';
 import '../shop/streak_shop_screen.dart';
 import '../challenges/challenges_screen.dart';
@@ -154,11 +155,9 @@ class _GamificationScreenState extends State<GamificationScreen> {
                             final success = await gamification.claimDailyCheckIn();
                             if (success) {
                               _triggerCheckInConfetti();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(languageProvider.translate('claim_success')),
-                                  backgroundColor: Colors.amber,
-                                ),
+                              CustomNotification.showPremium(
+                                context,
+                                languageProvider.translate('claim_success'),
                               );
                             }
                           };

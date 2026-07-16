@@ -99,19 +99,20 @@ class FlosyFeinApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
+    final gamificationProvider = Provider.of<GamificationProvider>(context);
 
     final String activeFont = ''; // Use system default font (Roboto/San Francisco/Noto Sans)
 
-    final lightTheme = AppTheme.lightTheme.copyWith(
-      textTheme: AppTheme.lightTheme.textTheme.apply(
-        fontFamily: activeFont.isEmpty ? null : activeFont,
-      ),
+    final lightTheme = AppTheme.getTheme(
+      isDark: false,
+      themeId: gamificationProvider.activeTheme,
+      fontFamily: activeFont,
     );
 
-    final darkTheme = AppTheme.darkTheme.copyWith(
-      textTheme: AppTheme.darkTheme.textTheme.apply(
-        fontFamily: activeFont.isEmpty ? null : activeFont,
-      ),
+    final darkTheme = AppTheme.getTheme(
+      isDark: true,
+      themeId: gamificationProvider.activeTheme,
+      fontFamily: activeFont,
     );
 
     return MaterialApp(

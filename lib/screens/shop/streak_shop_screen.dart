@@ -5,6 +5,7 @@ import '../../../providers/gamification_provider.dart';
 import '../../../providers/language_provider.dart';
 import '../../../widgets/confetti_widget.dart';
 import '../../../core/utils/haptic_helper.dart';
+import '../../../core/utils/notification_helper.dart';
 
 class StreakShopScreen extends StatefulWidget {
   const StreakShopScreen({super.key});
@@ -69,19 +70,15 @@ class _StreakShopScreenState extends State<StreakShopScreen> {
       } catch (e) {
         debugPrint('Firebase Analytics error: $e');
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lp.translate('buy_success').replaceFirst('{}', title)),
-          backgroundColor: Colors.amber,
-        ),
+      CustomNotification.showPremium(
+        context,
+        lp.translate('buy_success').replaceFirst('{}', title),
       );
     } else {
       HapticHelper.heavyTap();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lp.translate('buy_fail')),
-          backgroundColor: Colors.red,
-        ),
+      CustomNotification.showError(
+        context,
+        lp.translate('buy_fail'),
       );
     }
   }

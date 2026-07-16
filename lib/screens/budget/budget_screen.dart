@@ -6,6 +6,7 @@ import '../../providers/transaction_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../models/category_model.dart';
 import '../../core/utils/ad_helper.dart';
+import '../../core/utils/notification_helper.dart';
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -66,15 +67,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
           .setBudget(_selectedCategory, limit);
       _limitController.clear();
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            languageProvider
-                .translate('budget_added_success')
-                .replaceFirst('{}', languageProvider.translateCategory(_selectedCategory)),
-          ),
-          backgroundColor: Colors.green,
-        ),
+      ScaffoldMessenger.of(context).clearSnackBars();
+      CustomNotification.showSuccess(
+        context,
+        languageProvider
+            .translate('budget_added_success')
+            .replaceFirst('{}', languageProvider.translateCategory(_selectedCategory)),
       );
     }
 

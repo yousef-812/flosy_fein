@@ -177,4 +177,47 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData getTheme({
+    required bool isDark,
+    required String themeId,
+    required String fontFamily,
+  }) {
+    Color primary = primaryColor;
+    Color secondary = accentColor;
+
+    if (themeId == 'theme_gold') {
+      primary = const Color(0xFFFFB300); // Royal Amber/Gold
+      secondary = const Color(0xFFFFA000); // Deep Amber
+    } else if (themeId == 'theme_autumn') {
+      primary = const Color(0xFFD84315); // Deep Orange
+      secondary = const Color(0xFFF4511E); // Bright Orange
+    }
+
+    final baseTheme = isDark ? darkTheme : lightTheme;
+    final colorScheme = isDark
+        ? ColorScheme.dark(
+            primary: primary,
+            secondary: secondary,
+            surface: const Color(0xFF1E293B),
+            secondaryContainer: primary.withOpacity(0.2),
+          )
+        : ColorScheme.light(
+            primary: primary,
+            secondary: secondary,
+            surface: Colors.white,
+            secondaryContainer: primary.withOpacity(0.15),
+          );
+
+    return baseTheme.copyWith(
+      primaryColor: primary,
+      colorScheme: colorScheme,
+      textTheme: baseTheme.textTheme.apply(fontFamily: fontFamily),
+      appBarTheme: baseTheme.appBarTheme.copyWith(
+        titleTextStyle: baseTheme.appBarTheme.titleTextStyle?.copyWith(
+          fontFamily: fontFamily,
+        ),
+      ),
+    );
+  }
 }

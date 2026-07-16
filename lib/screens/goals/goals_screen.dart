@@ -5,6 +5,7 @@ import '../../providers/language_provider.dart';
 import '../../models/goal_model.dart';
 import '../../widgets/confetti_widget.dart';
 import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/notification_helper.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -92,12 +93,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   Navigator.pop(context);
                   HapticHelper.mediumTap();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(lp.translate('goal_added_success')),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  CustomNotification.showSuccess(context, lp.translate('goal_added_success'));
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -158,6 +154,15 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   final provider = Provider.of<TransactionProvider>(context, listen: false);
                   final isCompletedBefore = goal.currentAmount >= goal.targetAmount;
                   provider.updateGoalProgress(goal.id, amount);
+                  
+                  // Automatically add a transaction to deduct the savings amount from the active balance
+                  provider.addTransaction(
+                    title: lp.isArabic ? 'ادخار لهدف: ${goal.title}' : 'Savings for goal: ${goal.title}',
+                    amount: amount,
+                    date: DateTime.now(),
+                    isExpense: true,
+                    categoryName: 'أخرى',
+                  );
 
                   _savingsAmountController.clear();
                   Navigator.pop(context);
@@ -181,12 +186,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       ),
                     );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(lp.translate('progress_added_success')),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    CustomNotification.showSuccess(context, lp.translate('progress_added_success'));
                   }
                 },
                 style: ElevatedButton.styleFrom(

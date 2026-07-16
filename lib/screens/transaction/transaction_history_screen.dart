@@ -9,6 +9,7 @@ import '../../widgets/ad_native_widget.dart';
 import '../../widgets/ad_banner_widget.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/notification_helper.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   const TransactionHistoryScreen({super.key});
@@ -96,9 +97,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   HapticHelper.lightTap();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(lp.translate('title_copied_success'))),
-                  );
+                  CustomNotification.showSuccess(context, lp.translate('title_copied_success'));
                 },
               ),
               ListTile(
@@ -114,13 +113,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   );
                   Navigator.pop(context);
                   HapticHelper.successTap();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        lp.translate('tx_repeated_success'),
-                      ),
-                    ),
-                  );
+                  CustomNotification.showSuccess(context, lp.translate('tx_repeated_success'));
                 },
               ),
               ListTile(
@@ -145,19 +138,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     provider.deleteTransaction(tx.id);
     HapticHelper.heavyTap();
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(lp.translate('tx_deleted_undo_msg').replaceFirst('{}', tx.title)),
-        action: SnackBarAction(
-          label: lp.translate('undo_action_label'),
-          textColor: Colors.amber,
-          onPressed: () {
-            provider.undoDelete();
-            HapticHelper.successTap();
-          },
-        ),
-        duration: const Duration(seconds: 5),
+    CustomNotification.showInfo(
+      context,
+      lp.translate('tx_deleted_undo_msg').replaceFirst('{}', tx.title),
+      action: SnackBarAction(
+        label: lp.translate('undo_action_label'),
+        onPressed: () {
+          provider.undoDelete();
+          HapticHelper.successTap();
+        },
       ),
     );
   }
@@ -394,12 +383,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                                         isExpense: tx.isExpense,
                                         categoryName: tx.categoryName,
                                       );
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            languageProvider.translate('tx_repeated_today_msg').replaceFirst('{}', tx.title),
-                                          ),
-                                        ),
+                                      CustomNotification.showSuccess(
+                                        context,
+                                        languageProvider.translate('tx_repeated_today_msg').replaceFirst('{}', tx.title),
                                       );
                                       return false;
                                     } else {

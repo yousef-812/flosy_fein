@@ -5,6 +5,7 @@ import '../providers/gamification_provider.dart';
 import '../providers/language_provider.dart';
 import '../models/category_model.dart';
 import '../core/utils/haptic_helper.dart';
+import '../core/utils/notification_helper.dart';
 import '../core/utils/audio_helper.dart';
 
 class QuickAddSheet extends StatefulWidget {
@@ -111,15 +112,12 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     AudioHelper.playCashSound();
     Navigator.pop(context);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          languageProvider.translate('quick_add_success')
-              .replaceFirst('{}', _parsedTitle)
-              .replaceFirst('{}', '$_parsedAmount $currency'),
-        ),
-        backgroundColor: Colors.green,
-      ),
+    ScaffoldMessenger.of(context).clearSnackBars();
+    CustomNotification.showSuccess(
+      context,
+      languageProvider.translate('quick_add_success')
+          .replaceFirst('{}', _parsedTitle)
+          .replaceFirst('{}', '$_parsedAmount $currency'),
     );
   }
 

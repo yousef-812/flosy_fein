@@ -76,13 +76,32 @@ class AnalysisScreen extends StatelessWidget {
                                       return PieChartSectionData(
                                         color: category.color,
                                         value: entry.value,
-                                        title: '${percentage.toStringAsFixed(0)}%',
-                                        radius: 20,
-                                        titleStyle: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                        radius: 22,
+                                        showTitle: false,
+                                        badgeWidget: Container(
+                                          padding: const EdgeInsets.all(5),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).cardColor,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: category.color, width: 1.5),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(0.12),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            '${percentage.toStringAsFixed(0)}%',
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                              color: category.color,
+                                            ),
+                                          ),
                                         ),
+                                        badgePositionPercentageOffset: 0.9,
                                       );
                                     }).toList(),
                                   ),

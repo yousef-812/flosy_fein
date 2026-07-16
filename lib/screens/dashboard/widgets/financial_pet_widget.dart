@@ -4,6 +4,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/gamification_provider.dart';
 import '../../../providers/language_provider.dart';
 import '../../../core/utils/haptic_helper.dart';
+import '../../../core/utils/notification_helper.dart';
 
 class FinancialPetWidget extends StatefulWidget {
   const FinancialPetWidget({super.key});
@@ -23,12 +24,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
       setState(() {
         _showHearts = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lp.translate('feed_success_msg')),
-          backgroundColor: Colors.pink,
-        ),
-      );
+      CustomNotification.showSuccess(context, lp.translate('feed_success_msg'));
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
@@ -38,12 +34,7 @@ class _FinancialPetWidgetState extends State<FinancialPetWidget> {
       });
     } else {
       HapticHelper.heavyTap();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(lp.translate('feed_fail_msg')),
-          backgroundColor: Colors.red,
-        ),
-      );
+      CustomNotification.showError(context, lp.translate('feed_fail_msg'));
     }
   }
 
