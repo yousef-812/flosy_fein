@@ -30,6 +30,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   InterstitialAd? _interstitialAd;
   bool _isAdLoaded = false;
 
+  int _calculateCurrentStreak(List<TransactionModel> transactions) {
+    int currentStreak = 0;
+    final now = DateTime.now();
+    for (int i = 0; i < 30; i++) {
+      final checkDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+      final hasExpense = transactions.any((tx) =>
+          tx.isExpense &&
+          tx.date.day == checkDate.day &&
+          tx.date.month == checkDate.month &&
+          tx.date.year == checkDate.year);
+
+      if (!hasExpense) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+    return currentStreak;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -215,35 +235,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(height: 24, width: 1, color: Colors.grey.withOpacity(0.2)),
 
                           // Savings Streak
-                          Consumer<GamificationProvider>(
-                            builder: (context, gamification, child) {
-                              return Row(
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.12),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 22),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange.withOpacity(0.12),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.local_fire_department, color: Colors.orange, size: 22),
+                                  Text(
+                                    languageProvider.translate('current_streak'),
+                                    style: const TextStyle(fontSize: 9, color: Colors.grey),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        languageProvider.translate('current_streak'),
-                                        style: const TextStyle(fontSize: 9, color: Colors.grey),
-                                      ),
-                                      Text(
-                                        '${gamification.currentStreak} ${languageProvider.translate('days')}',
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  )
+                                  Text(
+                                    '${_calculateCurrentStreak(provider.transactions)} ${languageProvider.translate('days')}',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
                                 ],
-                              );
-                            }
+                              )
+                            ],
                           ),
                         ],
                       ),

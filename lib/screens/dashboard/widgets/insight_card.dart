@@ -102,7 +102,7 @@ class _InsightCardState extends State<InsightCard> {
               ],
             ),
             const SizedBox(height: 12),
-            const Divider(height: 1, color: Colors.blue24),
+            Divider(height: 1, color: Colors.blue.withOpacity(0.15)),
             const SizedBox(height: 12),
 
             // Mascot Quote Text
