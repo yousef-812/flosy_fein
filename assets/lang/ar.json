@@ -285,5 +285,16 @@
   "income_month_label": "الدخل (الشهر)",
   "expenses_label": "المصاريف",
   "recent_transactions": "آخر المعاملات",
-  "add_detailed_btn": "إضافة تفصيلية ➕"
+  "add_detailed_btn": "إضافة تفصيلية ➕",
+  "analysis_nav": "التحليلات",
+  "gamification_nav": "حصالة ومرح",
+  "onboarding_language_title": "اختر لغة التطبيق / Choose App Language",
+  "onboarding_welcome_sub_4": "هنسألك 4 أسئلة سريعة عشان نضبط التطبيق ليك.",
+  "onboarding_step_progress_4": "الخطوة {} من 4",
+  "onboarding_arabic": "العربية (Arabic)",
+  "onboarding_english": "English (الإنجليزية)",
+  "pet_play_title": "الحصالة والتحديات 🎮",
+  "analytics_title": "التحليلات والميزانية 📊",
+  "history_calendar_toggle_list": "قائمة العمليات",
+  "history_calendar_toggle_cal": "التقويم المالي"
 }

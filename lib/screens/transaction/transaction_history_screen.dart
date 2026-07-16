@@ -22,6 +22,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   int _filterIndex = 0; // 0 = All, 1 = Expenses, 2 = Income
   bool _isLoading = true;
 
+  int _viewMode = 0; // 0 = List View, 1 = Calendar View
+  DateTime _calendarSelectedDate = DateTime.now();
+
   @override
   void initState() {
     super.initState();
@@ -165,8 +168,31 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return Consumer<TransactionProvider>(
       builder: (context, provider, child) {
         final currency = provider.preferredCurrency;
-        
-        // Smart Search Filtering
+
+        // Calendar variables
+        final firstDayOfMonth = DateTime(_calendarSelectedDate.year, _calendarSelectedDate.month, 1);
+        final lastDayOfMonth = DateTime(_calendarSelectedDate.year, _calendarSelectedDate.month + 1, 0);
+        final daysInMonth = lastDayOfMonth.day;
+        final startWeekday = firstDayOfMonth.weekday;
+        final startOffset = (startWeekday % 7);
+
+        // List of transactions for the selected day in calendar view
+        final selectedDayTxs = provider.transactions.where((tx) =>
+            tx.date.day == _calendarSelectedDate.day &&
+            tx.date.month == _calendarSelectedDate.month &&
+            tx.date.year == _calendarSelectedDate.year).toList();
+
+        double dayIncome = 0;
+        double dayExpense = 0;
+        for (var tx in selectedDayTxs) {
+          if (tx.isExpense) {
+            dayExpense += tx.amount;
+          } else {
+            dayIncome += tx.amount;
+          }
+        }
+
+        // Smart Search Filtering for List View
         var filteredList = provider.transactions.where((tx) {
           final query = _searchQuery.trim().toLowerCase();
           if (query.isEmpty) return true;
@@ -191,7 +217,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             return tx.date.month == monthIndex;
           }
 
-          // 3. Normal Search Matching (Title & Category & Translated Category)
+          // 3. Normal Search Matching (Title & Category)
           final matchesSearch = tx.title.toLowerCase().contains(query) ||
               tx.categoryName.toLowerCase().contains(query) ||
               languageProvider.translateCategory(tx.categoryName).toLowerCase().contains(query);
@@ -221,163 +247,419 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text(languageProvider.translate('financial_history_title')),
+            title: Text(languageProvider.translate('history_nav')),
             centerTitle: true,
           ),
           body: Column(
             children: [
-              // Search input field
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: languageProvider.translate('search_history_hint'),
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                ),
-              ),
-
-              // Filter Chips
+              // Segmented Toggle Control
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    FilterChip(
-                      label: Text(languageProvider.translate('all_filter')),
-                      selected: _filterIndex == 0,
-                      onSelected: (_) => setState(() => _filterIndex = 0),
-                    ),
-                    FilterChip(
-                      label: Text(languageProvider.translate('expenses_filter'), style: const TextStyle(color: Colors.red)),
-                      selected: _filterIndex == 1,
-                      onSelected: (_) => setState(() => _filterIndex = 1),
-                    ),
-                    FilterChip(
-                      label: Text(languageProvider.translate('income_filter'), style: const TextStyle(color: Colors.green)),
-                      selected: _filterIndex == 2,
-                      onSelected: (_) => setState(() => _filterIndex = 2),
-                    ),
-                  ],
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<int>(
+                    segments: [
+                      ButtonSegment<int>(
+                        value: 0,
+                        icon: const Icon(Icons.list),
+                        label: Text(languageProvider.translate('history_calendar_toggle_list')),
+                      ),
+                      ButtonSegment<int>(
+                        value: 1,
+                        icon: const Icon(Icons.calendar_month),
+                        label: Text(languageProvider.translate('history_calendar_toggle_cal')),
+                      ),
+                    ],
+                    selected: {_viewMode},
+                    onSelectionChanged: (newSelection) {
+                      HapticHelper.lightTap();
+                      setState(() {
+                        _viewMode = newSelection.first;
+                      });
+                    },
+                  ),
                 ),
               ),
 
-              // Transaction history list
-              Expanded(
-                child: _isLoading
-                    ? _buildSkeletonList()
-                    : itemsWithAds.isEmpty
-                        ? Center(
-                            child: Text(
-                              languageProvider.translate('no_matching_txs'),
-                              style: const TextStyle(fontSize: 16, color: Colors.grey),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            itemCount: itemsWithAds.length,
-                            itemBuilder: (context, index) {
-                              final item = itemsWithAds[index];
-                              if (item == 'AD_PLACEHOLDER') {
-                                return const AdNativeWidget();
-                              }
+              // VIEW 0: LIST VIEW
+              if (_viewMode == 0) ...[
+                // Search Input Field
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: languageProvider.translate('search_history_hint'),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                ),
 
-                              final tx = item as TransactionModel;
-                              final category = CategoryModel.defaultCategories.firstWhere(
-                                (c) => c.name == tx.categoryName,
+                // Filter Chips
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      FilterChip(
+                        label: Text(languageProvider.translate('all_filter')),
+                        selected: _filterIndex == 0,
+                        onSelected: (_) => setState(() => _filterIndex = 0),
+                      ),
+                      FilterChip(
+                        label: Text(languageProvider.translate('expenses_filter'), style: const TextStyle(color: Colors.red)),
+                        selected: _filterIndex == 1,
+                        onSelected: (_) => setState(() => _filterIndex = 1),
+                      ),
+                      FilterChip(
+                        label: Text(languageProvider.translate('income_filter'), style: const TextStyle(color: Colors.green)),
+                        selected: _filterIndex == 2,
+                        onSelected: (_) => setState(() => _filterIndex = 2),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Transaction list
+                Expanded(
+                  child: _isLoading
+                      ? _buildSkeletonList()
+                      : itemsWithAds.isEmpty
+                          ? Center(
+                              child: Text(
+                                languageProvider.translate('no_matching_txs'),
+                                style: const TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                              itemCount: itemsWithAds.length,
+                              itemBuilder: (context, index) {
+                                final item = itemsWithAds[index];
+                                if (item == 'AD_PLACEHOLDER') {
+                                  return const AdNativeWidget();
+                                }
+
+                                final tx = item as TransactionModel;
+                                final category = CategoryModel.defaultCategories.firstWhere(
+                                  (c) => c.name == tx.categoryName,
                                   orElse: () => CategoryModel(name: tx.categoryName, icon: Icons.help, color: Colors.grey),
-                              );
+                                );
 
-                              return Dismissible(
-                                key: Key(tx.id),
-                                direction: DismissDirection.horizontal,
-                                background: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 20.0),
-                                  color: Colors.green.shade700,
-                                  child: const Icon(Icons.repeat, color: Colors.white),
-                                ),
-                                secondaryBackground: Container(
-                                  alignment: Alignment.centerLeft,
-                                  padding: const EdgeInsets.only(left: 20.0),
-                                  color: Colors.red.shade800,
-                                  child: const Icon(Icons.delete, color: Colors.white),
-                                ),
-                                confirmDismiss: (direction) async {
-                                  if (direction == DismissDirection.startToEnd) {
-                                    // Swipe Right: Duplicate/Repeat transaction today
-                                    HapticHelper.successTap();
-                                    provider.addTransaction(
-                                      title: tx.title,
-                                      amount: tx.amount,
-                                      date: DateTime.now(),
-                                      isExpense: tx.isExpense,
-                                      categoryName: tx.categoryName,
-                                    );
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          languageProvider.translate('tx_repeated_today_msg').replaceFirst('{}', tx.title),
+                                return Dismissible(
+                                  key: Key(tx.id),
+                                  direction: DismissDirection.horizontal,
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.only(right: 20.0),
+                                    color: Colors.green.shade700,
+                                    child: const Icon(Icons.repeat, color: Colors.white),
+                                  ),
+                                  secondaryBackground: Container(
+                                    alignment: Alignment.centerLeft,
+                                    padding: const EdgeInsets.only(left: 20.0),
+                                    color: Colors.red.shade800,
+                                    child: const Icon(Icons.delete, color: Colors.white),
+                                  ),
+                                  confirmDismiss: (direction) async {
+                                    if (direction == DismissDirection.startToEnd) {
+                                      // Swipe Right: Duplicate
+                                      HapticHelper.successTap();
+                                      provider.addTransaction(
+                                        title: tx.title,
+                                        amount: tx.amount,
+                                        date: DateTime.now(),
+                                        isExpense: tx.isExpense,
+                                        categoryName: tx.categoryName,
+                                      );
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            languageProvider.translate('tx_repeated_today_msg').replaceFirst('{}', tx.title),
+                                          ),
+                                        ),
+                                      );
+                                      return false;
+                                    } else {
+                                      // Swipe Left: Delete
+                                      return true;
+                                    }
+                                  },
+                                  onDismissed: (direction) {
+                                    if (direction == DismissDirection.endToStart) {
+                                      _deleteWithUndo(context, tx, provider, languageProvider);
+                                    }
+                                  },
+                                  child: Card(
+                                    margin: const EdgeInsets.only(bottom: 8.0),
+                                    child: ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: category.color.withOpacity(0.2),
+                                        child: Icon(category.icon, color: category.color),
+                                      ),
+                                      title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                      subtitle: Text(
+                                        '${tx.date.day}/${tx.date.month}/${tx.date.year}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      trailing: Text(
+                                        '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: tx.isExpense ? Colors.red : Colors.green,
+                                          fontSize: 16,
                                         ),
                                       ),
-                                    );
-                                    return false; // Don't dismiss item
-                                  } else {
-                                    // Swipe Left: Delete
-                                    return true;
-                                  }
-                                },
-                                onDismissed: (direction) {
-                                  if (direction == DismissDirection.endToStart) {
-                                    _deleteWithUndo(context, tx, provider, languageProvider);
-                                  }
-                                },
-                                child: Card(
-                                  margin: const EdgeInsets.only(bottom: 8.0),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: category.color.withOpacity(0.2),
-                                      child: Icon(category.icon, color: category.color),
+                                      onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
                                     ),
-                                    title: Text(tx.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text(
-                                      '${tx.date.day}/${tx.date.month}/${tx.date.year}',
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                    trailing: Text(
-                                      '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: tx.isExpense ? Colors.red : Colors.green,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
+                ),
+              ],
+
+              // VIEW 1: CALENDAR VIEW
+              if (_viewMode == 1) ...[
+                // Month Selector Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios),
+                        onPressed: () {
+                          HapticHelper.lightTap();
+                          setState(() {
+                            _calendarSelectedDate = DateTime(_calendarSelectedDate.year, _calendarSelectedDate.month - 1, 1);
+                          });
+                        },
+                      ),
+                      Text(
+                        '${languageProvider.translate('month_${_calendarSelectedDate.month}')} ${_calendarSelectedDate.year}',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_ios),
+                        onPressed: () {
+                          HapticHelper.lightTap();
+                          setState(() {
+                            _calendarSelectedDate = DateTime(_calendarSelectedDate.year, _calendarSelectedDate.month + 1, 1);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Weekdays Labels
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Text(languageProvider.translate('day_sun'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_mon'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_tue'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_wed'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_thu'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_fri'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                      Text(languageProvider.translate('day_sat'), style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // Days Grid
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 7,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                      childAspectRatio: 1.1,
+                    ),
+                    itemCount: daysInMonth + startOffset,
+                    itemBuilder: (context, index) {
+                      if (index < startOffset) {
+                        return const SizedBox.shrink();
+                      }
+
+                      final dayNumber = index - startOffset + 1;
+                      final date = DateTime(_calendarSelectedDate.year, _calendarSelectedDate.month, dayNumber);
+                      final isSelected = date.day == _calendarSelectedDate.day &&
+                          date.month == _calendarSelectedDate.month &&
+                          date.year == _calendarSelectedDate.year;
+
+                      final dayTxs = provider.transactions.where((tx) =>
+                          tx.date.day == dayNumber &&
+                          tx.date.month == _calendarSelectedDate.month &&
+                          tx.date.year == _calendarSelectedDate.year).toList();
+
+                      final hasTxs = dayTxs.isNotEmpty;
+                      final hasExpenses = dayTxs.any((tx) => tx.isExpense);
+
+                      return InkWell(
+                        onTap: () {
+                          HapticHelper.lightTap();
+                          setState(() {
+                            _calendarSelectedDate = date;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF1E88E5)
+                                : hasTxs
+                                    ? (hasExpenses ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1))
+                                    : Theme.of(context).cardColor,
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF1E88E5)
+                                  : Colors.grey.withOpacity(0.15),
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-              ),
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$dayNumber',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Theme.of(context).textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                              if (hasTxs && !isSelected)
+                                Container(
+                                  width: 5,
+                                  height: 5,
+                                  margin: const EdgeInsets.only(top: 2),
+                                  decoration: BoxDecoration(
+                                    color: hasExpenses ? Colors.red : Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const Divider(height: 24),
+
+                // Selected Day Header Details
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        languageProvider.translate('day_details')
+                            .replaceFirst('{}', '${_calendarSelectedDate.day}/${_calendarSelectedDate.month}/${_calendarSelectedDate.year}'),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      Row(
+                        children: [
+                          if (dayIncome > 0)
+                            Text(
+                              '+${dayIncome.toStringAsFixed(0)} $currency ',
+                              style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          if (dayExpense > 0)
+                            Text(
+                              '-${dayExpense.toStringAsFixed(0)} $currency',
+                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+
+                // Selected Day Transaction List
+                Expanded(
+                  child: selectedDayTxs.isEmpty
+                      ? Center(
+                          child: Text(
+                            languageProvider.translate('no_transactions_today'),
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          itemCount: selectedDayTxs.length,
+                          itemBuilder: (context, index) {
+                            final tx = selectedDayTxs[index];
+                            final category = CategoryModel.defaultCategories.firstWhere(
+                              (c) => c.name == tx.categoryName,
+                              orElse: () => CategoryModel(name: tx.categoryName, icon: Icons.help, color: Colors.grey),
+                            );
+                            return Dismissible(
+                              key: Key(tx.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.only(left: 20.0),
+                                color: Colors.red.shade800,
+                                child: const Icon(Icons.delete, color: Colors.white),
+                              ),
+                              onDismissed: (direction) {
+                                _deleteWithUndo(context, tx, provider, languageProvider);
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.only(bottom: 8.0),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: category.color.withOpacity(0.2),
+                                    child: Icon(category.icon, color: category.color),
+                                  ),
+                                  title: Text(tx.title),
+                                  trailing: Text(
+                                    '${tx.isExpense ? "-" : "+"}${tx.amount.toStringAsFixed(2)} $currency',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: tx.isExpense ? Colors.red : Colors.green,
+                                    ),
+                                  ),
+                                  onLongPress: () => _showContextMenu(context, tx, provider, languageProvider),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ],
           ),
         );

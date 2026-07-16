@@ -35,7 +35,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _nextPage() {
-    if (_currentPage < 2) {
+    if (_currentPage < 3) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -115,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   Text(
                     languageProvider
-                        .translate('onboarding_step_progress')
+                        .translate('onboarding_step_progress_4')
                         .replaceFirst('{}', '${_currentPage + 1}'),
                     style: const TextStyle(
                       fontSize: 16,
@@ -124,7 +124,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   Row(
-                    children: List.generate(3, (index) {
+                    children: List.generate(4, (index) {
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         margin: const EdgeInsets.only(left: 6),
@@ -159,7 +159,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    languageProvider.translate('onboarding_welcome_sub'),
+                    languageProvider.translate('onboarding_welcome_sub_4'),
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.grey,
@@ -181,6 +181,97 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   });
                 },
                 children: [
+                  // Page 0: Language Selection
+                  _buildPage(
+                    title: languageProvider.translate('onboarding_language_title'),
+                    content: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Row(
+                        children: [
+                          // Arabic Language Option
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: languageProvider.isArabic,
+                              label: languageProvider.translate('onboarding_arabic'),
+                              child: InkWell(
+                                onTap: () => languageProvider.changeLanguage('ar'),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    color: languageProvider.isArabic
+                                        ? const Color(0xFF1E88E5).withOpacity(0.15)
+                                        : Theme.of(context).cardColor,
+                                    border: Border.all(
+                                      color: languageProvider.isArabic
+                                          ? const Color(0xFF1E88E5)
+                                          : Colors.grey.withOpacity(0.3),
+                                      width: languageProvider.isArabic ? 2 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text('🇸🇦', style: TextStyle(fontSize: 48)),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        languageProvider.translate('onboarding_arabic'),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          // English Language Option
+                          Expanded(
+                            child: Semantics(
+                              button: true,
+                              selected: !languageProvider.isArabic,
+                              label: languageProvider.translate('onboarding_english'),
+                              child: InkWell(
+                                onTap: () => languageProvider.changeLanguage('en'),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    color: !languageProvider.isArabic
+                                        ? const Color(0xFF1E88E5).withOpacity(0.15)
+                                        : Theme.of(context).cardColor,
+                                    border: Border.all(
+                                      color: !languageProvider.isArabic
+                                          ? const Color(0xFF1E88E5)
+                                          : Colors.grey.withOpacity(0.3),
+                                      width: !languageProvider.isArabic ? 2 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text('🇬🇧', style: TextStyle(fontSize: 48)),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        languageProvider.translate('onboarding_english'),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   // Page 1: Currency Selection
                   _buildPage(
                     title: languageProvider.translate('onboarding_currency_title'),
@@ -425,12 +516,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox.shrink(),
                   Semantics(
                     button: true,
-                    label: _currentPage == 2
+                    label: _currentPage == 3
                         ? languageProvider.translate('start_using')
                         : languageProvider.translate('next'),
                     child: ElevatedButton(
                       onPressed: () {
-                        if (_currentPage < 2) {
+                        if (_currentPage < 3) {
                           _nextPage();
                         } else {
                           _finish(context);
@@ -444,7 +535,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage == 2
+                        _currentPage == 3
                             ? languageProvider.translate('start_using')
                             : languageProvider.translate('next'),
                         style: const TextStyle(

@@ -18,9 +18,10 @@ import 'providers/onboarding_provider.dart';
 import 'providers/gamification_provider.dart';
 import 'providers/language_provider.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/dashboard/analysis_screen.dart';
+import 'screens/dashboard/gamification_screen.dart';
 import 'screens/transaction/transaction_history_screen.dart';
 import 'screens/settings/settings_screen.dart';
-import 'screens/calendar/calendar_screen.dart';
 import 'screens/splash/splash_screen.dart';
 import 'widgets/quick_add_sheet.dart';
 import 'core/utils/audio_helper.dart';
@@ -98,7 +99,7 @@ class FlosyFeinApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
 
-    final String activeFont = languageProvider.isArabic ? 'Amiri' : '';
+    final String activeFont = ''; // Use system default font (Roboto/San Francisco/Noto Sans)
 
     final lightTheme = AppTheme.lightTheme.copyWith(
       textTheme: AppTheme.lightTheme.textTheme.apply(
@@ -145,7 +146,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
   final List<Widget> _screens = const [
     DashboardScreen(),
-    CalendarScreen(),
+    AnalysisScreen(),
+    GamificationScreen(),
     TransactionHistoryScreen(),
     SettingsScreen(),
   ];
@@ -170,9 +172,14 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
             label: languageProvider.translate('home'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.calendar_month_outlined),
-            selectedIcon: const Icon(Icons.calendar_month),
-            label: languageProvider.translate('calendar_nav'),
+            icon: const Icon(Icons.analytics_outlined),
+            selectedIcon: const Icon(Icons.analytics),
+            label: languageProvider.translate('analysis_nav'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.sports_esports_outlined),
+            selectedIcon: const Icon(Icons.sports_esports),
+            label: languageProvider.translate('gamification_nav'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_outlined),

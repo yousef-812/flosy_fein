@@ -268,5 +268,16 @@
   "income_month_label": "Income (Month)",
   "expenses_label": "Expenses",
   "recent_transactions": "Recent Transactions",
-  "add_detailed_btn": "Detailed Add ➕"
+  "add_detailed_btn": "Detailed Add ➕",
+  "analysis_nav": "Analysis",
+  "gamification_nav": "Pet & Play",
+  "onboarding_language_title": "Choose App Language / اختر لغة التطبيق",
+  "onboarding_welcome_sub_4": "We will ask you 4 quick questions to customize the app.",
+  "onboarding_step_progress_4": "Step {} of 4",
+  "onboarding_arabic": "العربية (Arabic)",
+  "onboarding_english": "English (الإنجليزية)",
+  "pet_play_title": "Pet & Challenges 🎮",
+  "analytics_title": "Analytics & Budgets 📊",
+  "history_calendar_toggle_list": "Transactions List",
+  "history_calendar_toggle_cal": "Financial Calendar"
 }
