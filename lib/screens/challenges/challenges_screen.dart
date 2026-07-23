@@ -14,6 +14,16 @@ class ChallengesScreen extends StatefulWidget {
 
 class _ChallengesScreenState extends State<ChallengesScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Provider.of<TransactionProvider>(context, listen: false)
+          .evaluateChallenges();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final languageProvider = Provider.of<LanguageProvider>(context);
 
@@ -24,12 +34,17 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () {
-              Provider.of<TransactionProvider>(context, listen: false).resetChallenges();
+            onPressed: () async {
+              final provider =
+                  Provider.of<TransactionProvider>(context, listen: false);
+              await provider.resetChallenges();
               HapticHelper.mediumTap();
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(languageProvider.translate('challenges_reset_success')),
+                  content: Text(
+                    languageProvider.translate('challenges_reset_success'),
+                  ),
                 ),
               );
             },
@@ -50,57 +65,28 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             itemCount: challenges.length,
             itemBuilder: (context, index) {
-              final ch = challenges[index];
-              final now = DateTime.now();
-              final difference = now.difference(ch.startDate).inDays;
-              final daysLeft = (ch.durationDays - difference).clamp(0, ch.durationDays);
-
-              // Automatically evaluate simple day challenges
-              if (ch.id == 'challenge_3' && !ch.isCompleted && !ch.isFailed) {
-                // Challenge 3 is "Day without expenses"
-                // Check if yesterday or today has 0 expenses
-                final today = DateTime(now.year, now.month, now.day);
-                final todayTxs = provider.transactions.where((tx) =>
-                    tx.isExpense &&
-                    DateTime(tx.date.year, tx.date.month, tx.date.day) == today).toList();
-                if (difference >= 1 && todayTxs.isEmpty) {
-                  ch.isCompleted = true;
-                  ch.save();
-                } else if (todayTxs.isNotEmpty) {
-                  // User spent money today
-                  ch.isFailed = true;
-                  ch.save();
-                }
-              }
-
-              Color statusColor = Colors.blue;
-              String statusText = languageProvider.translate('challenge_status_ongoing');
-              IconData statusIcon = Icons.hourglass_empty;
-
-              if (ch.isCompleted) {
-                statusColor = Colors.green;
-                statusText = languageProvider.translate('challenge_status_completed');
-                statusIcon = Icons.stars;
-              } else if (ch.isFailed) {
-                statusColor = Colors.red;
-                statusText = languageProvider.translate('challenge_status_failed');
-                statusIcon = Icons.cancel;
-              }
-
-              final displayTitle = languageProvider.translate('${ch.id}_title');
-              final displayDesc = languageProvider.translate('${ch.id}_desc');
+              final challenge = challenges[index];
+              final daysLeft = _daysLeft(challenge);
+              final status = _statusFor(challenge, languageProvider);
+              final displayTitle =
+                  languageProvider.translate('${challenge.id}_title');
+              final displayDescription =
+                  languageProvider.translate('${challenge.id}_desc');
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 16.0),
+                margin: const EdgeInsets.only(bottom: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: statusColor.withOpacity(0.5), width: 1.5),
+                  side: BorderSide(
+                    color: status.color.withOpacity(0.5),
+                    width: 1.5,
+                  ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -118,70 +104,52 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
                           ),
                           Chip(
                             label: Text(
-                              statusText,
+                              status.text,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            backgroundColor: statusColor,
+                            backgroundColor: status.color,
                             padding: EdgeInsets.zero,
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        displayDesc,
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        displayDescription,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              Icon(statusIcon, color: statusColor, size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                ch.isCompleted
-                                    ? languageProvider.translate('saving_goal_great')
-                                    : ch.isFailed
-                                        ? languageProvider.translate('challenge_failed_msg')
-                                        : languageProvider.translate('challenge_days_left')
-                                            .replaceFirst('{}', '$daysLeft')
-                                            .replaceFirst('{}', '${ch.durationDays}'),
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          if (!ch.isCompleted && !ch.isFailed)
-                            ElevatedButton(
-                              onPressed: () {
-                                // Manual verify trigger (for demo purposes)
-                                setState(() {
-                                  ch.isCompleted = true;
-                                  ch.save();
-                                });
-                                HapticHelper.successTap();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(languageProvider.translate('challenge_success_snackbar')),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: statusColor.withOpacity(0.2),
-                                foregroundColor: statusColor,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: Text(
-                                languageProvider.translate('verify_challenge_btn'),
-                                style: const TextStyle(fontSize: 12),
+                          Icon(status.icon, color: status.color, size: 18),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              challenge.isCompleted
+                                  ? languageProvider
+                                      .translate('saving_goal_great')
+                                  : challenge.isFailed
+                                      ? languageProvider
+                                          .translate('challenge_failed_msg')
+                                      : languageProvider
+                                          .translate('challenge_days_left')
+                                          .replaceFirst('{}', '$daysLeft')
+                                          .replaceFirst(
+                                            '{}',
+                                            '${challenge.durationDays}',
+                                          ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
+                          ),
                         ],
                       ),
                     ],
@@ -194,4 +162,56 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
       ),
     );
   }
+
+  int _daysLeft(ChallengeModel challenge) {
+    final start = DateTime(
+      challenge.startDate.year,
+      challenge.startDate.month,
+      challenge.startDate.day,
+    );
+    final end = start.add(Duration(days: challenge.durationDays));
+    if (!DateTime.now().isBefore(end)) return 0;
+
+    final remaining = end.difference(DateTime.now());
+    return (remaining.inHours / 24).ceil().clamp(0, challenge.durationDays);
+  }
+
+  _ChallengeStatus _statusFor(
+    ChallengeModel challenge,
+    LanguageProvider languageProvider,
+  ) {
+    if (challenge.isCompleted) {
+      return _ChallengeStatus(
+        color: Colors.green,
+        text: languageProvider.translate('challenge_status_completed'),
+        icon: Icons.stars,
+      );
+    }
+
+    if (challenge.isFailed) {
+      return _ChallengeStatus(
+        color: Colors.red,
+        text: languageProvider.translate('challenge_status_failed'),
+        icon: Icons.cancel,
+      );
+    }
+
+    return _ChallengeStatus(
+      color: Colors.blue,
+      text: languageProvider.translate('challenge_status_ongoing'),
+      icon: Icons.hourglass_empty,
+    );
+  }
+}
+
+class _ChallengeStatus {
+  final Color color;
+  final String text;
+  final IconData icon;
+
+  const _ChallengeStatus({
+    required this.color,
+    required this.text,
+    required this.icon,
+  });
 }
