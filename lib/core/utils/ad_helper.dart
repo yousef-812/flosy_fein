@@ -3,22 +3,33 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdHelper {
-  // Premium subscription check
+  // Premium is intentionally disabled until real store billing is integrated.
   static bool isPremiumUser = false;
   static DateTime? _lastInterstitialShowTime;
 
   static Future<void> checkPremiumStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    isPremiumUser = prefs.getBool('is_premium_user') ?? false;
+
+    // Remove the old mock flag so a tap on the previous demo button cannot
+    // permanently unlock premium features without a verified purchase.
+    await prefs.remove('is_premium_user');
+    isPremiumUser = false;
   }
 
+  /// Premium must only be changed by a verified billing implementation.
+  /// Passing `true` is ignored until Google Play / App Store billing is added.
   static Future<void> setPremiumStatus(bool premium) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_premium_user', premium);
-    isPremiumUser = premium;
+    if (premium) {
+      debugPrint('Premium activation ignored: store billing is not configured.');
+      return;
+    }
+
+    await prefs.remove('is_premium_user');
+    isPremiumUser = false;
   }
 
-  // Interstitial frequency capping (at most once every 3 minutes for better user experience)
+  // Interstitial frequency capping (at most once every 3 minutes).
   static bool get canShowInterstitial {
     if (isPremiumUser) return false;
     if (_lastInterstitialShowTime == null) return true;
@@ -30,33 +41,34 @@ class AdHelper {
     _lastInterstitialShowTime = DateTime.now();
   }
 
-  // Ad Unit IDs - Always returning test IDs for verification in release APK
+  // Google-provided test ad unit IDs only. Replace these values after the app
+  // is created in AdMob and production consent/release checks are complete.
   static String get bannerAdUnitId {
-    if (isPremiumUser) return '';
+    if (isPremiumUser || kIsWeb) return '';
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/6300978111'; // Android Test Banner
+      return 'ca-app-pub-3940256099942544/6300978111';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/2934735716'; // iOS Test Banner
+      return 'ca-app-pub-3940256099942544/2934735716';
     }
     return '';
   }
 
   static String get interstitialAdUnitId {
-    if (isPremiumUser) return '';
+    if (isPremiumUser || kIsWeb) return '';
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/1033173712'; // Android Test Interstitial
+      return 'ca-app-pub-3940256099942544/1033173712';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/4411468910'; // iOS Test Interstitial
+      return 'ca-app-pub-3940256099942544/4411468910';
     }
     return '';
   }
 
   static String get nativeAdUnitId {
-    if (isPremiumUser) return '';
+    if (isPremiumUser || kIsWeb) return '';
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/2247696110'; // Android Test Native
+      return 'ca-app-pub-3940256099942544/2247696110';
     } else if (Platform.isIOS) {
-      return 'ca-app-pub-3940256099942544/3986694507'; // iOS Test Native
+      return 'ca-app-pub-3940256099942544/3986694507';
     }
     return '';
   }
