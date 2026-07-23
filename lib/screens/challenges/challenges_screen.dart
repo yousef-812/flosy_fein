@@ -164,16 +164,13 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
   }
 
   int _daysLeft(ChallengeModel challenge) {
-    final start = DateTime(
-      challenge.startDate.year,
-      challenge.startDate.month,
-      challenge.startDate.day,
+    final end = challenge.startDate.add(
+      Duration(days: challenge.durationDays),
     );
-    final end = start.add(Duration(days: challenge.durationDays));
-    if (!DateTime.now().isBefore(end)) return 0;
-
     final remaining = end.difference(DateTime.now());
-    return (remaining.inHours / 24)
+    if (remaining.isNegative) return 0;
+
+    return (remaining.inSeconds / Duration.secondsPerDay)
         .ceil()
         .clamp(0, challenge.durationDays)
         .toInt();
