@@ -10,6 +10,15 @@ import '../models/challenge_model.dart';
 class TransactionProvider extends ChangeNotifier {
   static const String _preferredCurrencyKey = 'preferred_currency';
   static const double _shoppingChallengeLimit = 500;
+  static const Set<String> _supportedCurrencies = {
+    'ج.م',
+    'ر.س',
+    'د.إ',
+    'د.ك',
+    'د.أ',
+    'ج.س',
+    'دولار',
+  };
 
   late final Box<TransactionModel> _transactionBox;
   late final Box<BudgetModel> _budgetBox;
@@ -67,14 +76,19 @@ class TransactionProvider extends ChangeNotifier {
   Future<void> _loadPreferredCurrency() async {
     final prefs = await SharedPreferences.getInstance();
     final savedCurrency = prefs.getString(_preferredCurrencyKey);
-    if (savedCurrency == null || savedCurrency.isEmpty) return;
+    if (savedCurrency == null || !_supportedCurrencies.contains(savedCurrency)) {
+      return;
+    }
 
     _preferredCurrency = savedCurrency;
     notifyListeners();
   }
 
   Future<void> setPreferredCurrency(String currency) async {
-    if (currency.isEmpty || currency == _preferredCurrency) return;
+    if (!_supportedCurrencies.contains(currency) ||
+        currency == _preferredCurrency) {
+      return;
+    }
 
     _preferredCurrency = currency;
     final prefs = await SharedPreferences.getInstance();
@@ -138,7 +152,7 @@ class TransactionProvider extends ChangeNotifier {
     _loadData();
     await evaluateChallenges();
 
-    // Do not send amounts, titles, or financial categories to Analytics.
+    // Never send financial values, titles, or categories to Analytics.
     try {
       await FirebaseAnalytics.instance.logEvent(
         name: 'add_transaction',
@@ -296,24 +310,15 @@ class TransactionProvider extends ChangeNotifier {
     bool hasChanges = false;
 
     for (final challenge in _challenges) {
-      final start = DateTime(
-        challenge.startDate.year,
-        challenge.startDate.month,
-        challenge.startDate.day,
-      );
+      final start = challenge.startDate;
       final endExclusive = start.add(Duration(days: challenge.durationDays));
       final periodExpenses = _transactions.where((transaction) {
-        if (!transaction.isExpense) return false;
-        final transactionDay = DateTime(
-          transaction.date.year,
-          transaction.date.month,
-          transaction.date.day,
-        );
-        return !transactionDay.isBefore(start) &&
-            transactionDay.isBefore(endExclusive);
+        return transaction.isExpense &&
+            !transaction.date.isBefore(start) &&
+            transaction.date.isBefore(endExclusive);
       }).toList();
 
-      bool failed = false;
+      bool failed;
       switch (challenge.id) {
         case 'challenge_1':
           failed = periodExpenses.any(_isCoffeeExpense);
