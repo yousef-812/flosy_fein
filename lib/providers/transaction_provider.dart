@@ -1,59 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 import '../models/budget_model.dart';
 import '../models/goal_model.dart';
 import '../models/challenge_model.dart';
 
 class TransactionProvider extends ChangeNotifier {
-  late Box<TransactionModel> _transactionBox;
-  late Box<BudgetModel> _budgetBox;
-  late Box<GoalModel> _goalsBox;
-  late Box<ChallengeModel> _challengesBox;
+  static const String _preferredCurrencyKey = 'preferred_currency';
+  static const double _shoppingChallengeLimit = 500;
+
+  late final Box<TransactionModel> _transactionBox;
+  late final Box<BudgetModel> _budgetBox;
+  late final Box<GoalModel> _goalsBox;
+  late final Box<ChallengeModel> _challengesBox;
 
   List<TransactionModel> _transactions = [];
   List<BudgetModel> _budgets = [];
   List<GoalModel> _goals = [];
   List<ChallengeModel> _challenges = [];
-  String _preferredCurrency = 'ج.م'; // Default
+  String _preferredCurrency = 'ج.م';
 
-  // Temporary storage for Undo Action
   TransactionModel? _lastDeletedTransaction;
-  int? _lastDeletedIndex;
 
   TransactionProvider() {
     _transactionBox = Hive.box<TransactionModel>('transactionsBox');
     _budgetBox = Hive.box<BudgetModel>('budgetsBox');
     _goalsBox = Hive.box<GoalModel>('goalsBox');
     _challengesBox = Hive.box<ChallengeModel>('challengesBox');
+
     _loadData();
+    _loadPreferredCurrency();
     _initializeDefaultChallenges();
   }
 
-  List<TransactionModel> get transactions => _transactions;
-  List<BudgetModel> get budgets => _budgets;
-  List<GoalModel> get goals => _goals;
-  List<ChallengeModel> get challenges => _challenges;
+  List<TransactionModel> get transactions => List.unmodifiable(_transactions);
+  List<BudgetModel> get budgets => List.unmodifiable(_budgets);
+  List<GoalModel> get goals => List.unmodifiable(_goals);
+  List<ChallengeModel> get challenges => List.unmodifiable(_challenges);
   String get preferredCurrency => _preferredCurrency;
 
   void _loadData() {
-    _transactions = _transactionBox.values.toList();
-    _transactions.sort((a, b) => b.date.compareTo(a.date)); // Newest first
-    
-    // Recalculate budgets spent amount dynamically for the current month!
+    _transactions = _transactionBox.values.toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
     final now = DateTime.now();
-    _budgets = _budgetBox.values.toList().map((budget) {
-      double spent = 0;
-      for (var tx in _transactions) {
-        if (tx.isExpense &&
-            tx.categoryName == budget.categoryName &&
-            tx.date.month == now.month &&
-            tx.date.year == now.year) {
-          spent += tx.amount;
-        }
-      }
-      budget.spentAmount = spent;
+    _budgets = _budgetBox.values.map((budget) {
+      budget.spentAmount = _transactions
+          .where(
+            (transaction) =>
+                transaction.isExpense &&
+                transaction.categoryName == budget.categoryName &&
+                transaction.date.month == now.month &&
+                transaction.date.year == now.year,
+          )
+          .fold<double>(0, (sum, transaction) => sum + transaction.amount);
       return budget;
     }).toList();
 
@@ -62,47 +64,56 @@ class TransactionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setPreferredCurrency(String currency) async {
-    _preferredCurrency = currency;
+  Future<void> _loadPreferredCurrency() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedCurrency = prefs.getString(_preferredCurrencyKey);
+    if (savedCurrency == null || savedCurrency.isEmpty) return;
+
+    _preferredCurrency = savedCurrency;
     notifyListeners();
   }
 
-  // Financial calculations
+  Future<void> setPreferredCurrency(String currency) async {
+    if (currency.isEmpty || currency == _preferredCurrency) return;
+
+    _preferredCurrency = currency;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_preferredCurrencyKey, currency);
+    notifyListeners();
+  }
+
   double get totalBalance {
-    double balance = 0;
-    for (var tx in _transactions) {
-      if (tx.isExpense) {
-        balance -= tx.amount;
-      } else {
-        balance += tx.amount;
-      }
-    }
-    return balance;
+    return _transactions.fold<double>(0, (balance, transaction) {
+      return transaction.isExpense
+          ? balance - transaction.amount
+          : balance + transaction.amount;
+    });
   }
 
   double get monthlyIncome {
-    double income = 0;
     final now = DateTime.now();
-    for (var tx in _transactions) {
-      if (!tx.isExpense && tx.date.month == now.month && tx.date.year == now.year) {
-        income += tx.amount;
-      }
-    }
-    return income;
+    return _transactions
+        .where(
+          (transaction) =>
+              !transaction.isExpense &&
+              transaction.date.month == now.month &&
+              transaction.date.year == now.year,
+        )
+        .fold<double>(0, (sum, transaction) => sum + transaction.amount);
   }
 
   double get monthlyExpenses {
-    double expenses = 0;
     final now = DateTime.now();
-    for (var tx in _transactions) {
-      if (tx.isExpense && tx.date.month == now.month && tx.date.year == now.year) {
-        expenses += tx.amount;
-      }
-    }
-    return expenses;
+    return _transactions
+        .where(
+          (transaction) =>
+              transaction.isExpense &&
+              transaction.date.month == now.month &&
+              transaction.date.year == now.year,
+        )
+        .fold<double>(0, (sum, transaction) => sum + transaction.amount);
   }
 
-  // CRUD for transactions
   Future<void> addTransaction({
     required String title,
     required double amount,
@@ -110,86 +121,79 @@ class TransactionProvider extends ChangeNotifier {
     required bool isExpense,
     required String categoryName,
   }) async {
-    final tx = TransactionModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: title,
+    if (title.trim().isEmpty || categoryName.trim().isEmpty || amount <= 0) {
+      return;
+    }
+
+    final transaction = TransactionModel(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      title: title.trim(),
       amount: amount,
       date: date,
       isExpense: isExpense,
-      categoryName: categoryName,
+      categoryName: categoryName.trim(),
     );
-    await _transactionBox.put(tx.id, tx);
-    
-    // Update budget consumption if it's an expense
-    if (isExpense) {
-      _updateBudgetSpent(categoryName, amount);
-      _checkChallengesOnExpenseAdded(categoryName, amount);
-    }
 
+    await _transactionBox.put(transaction.id, transaction);
+    _loadData();
+    await evaluateChallenges();
+
+    // Do not send amounts, titles, or financial categories to Analytics.
     try {
-      FirebaseAnalytics.instance.logEvent(
+      await FirebaseAnalytics.instance.logEvent(
         name: 'add_transaction',
         parameters: {
-          'amount': amount,
-          'is_expense': isExpense ? 1 : 0,
-          'category': categoryName,
+          'transaction_type': isExpense ? 'expense' : 'income',
         },
       );
-    } catch (e) {
-      debugPrint('Firebase Analytics error: $e');
+    } catch (error) {
+      debugPrint('Firebase Analytics error: $error');
     }
-
-    _loadData();
   }
 
   Future<void> deleteTransaction(String id) async {
-    final tx = _transactionBox.get(id);
-    if (tx != null) {
-      // Store for Undo
-      _lastDeletedTransaction = tx;
-      _lastDeletedIndex = _transactions.indexOf(tx);
+    final transaction = _transactionBox.get(id);
+    if (transaction == null) return;
 
-      if (tx.isExpense) {
-        _updateBudgetSpent(tx.categoryName, -tx.amount); // Refund budget
-        _checkChallengesOnExpenseDeleted(tx.categoryName, tx.amount);
-      }
-      await tx.delete();
-      _loadData();
-    }
+    _lastDeletedTransaction = transaction;
+    await transaction.delete();
+    _loadData();
+    await evaluateChallenges();
   }
 
-  // Undo Delete Method
   Future<void> undoDelete() async {
-    if (_lastDeletedTransaction != null) {
-      final tx = _lastDeletedTransaction!;
-      await _transactionBox.put(tx.id, tx);
-      if (tx.isExpense) {
-        _updateBudgetSpent(tx.categoryName, tx.amount);
-        _checkChallengesOnExpenseAdded(tx.categoryName, tx.amount);
-      }
-      _lastDeletedTransaction = null;
-      _lastDeletedIndex = null;
-      _loadData();
-    }
+    final transaction = _lastDeletedTransaction;
+    if (transaction == null) return;
+
+    await _transactionBox.put(transaction.id, transaction);
+    _lastDeletedTransaction = null;
+    _loadData();
+    await evaluateChallenges();
   }
 
-  // Budget calculations and management
   BudgetModel? getBudgetForCategory(String categoryName) {
     try {
-      return _budgets.firstWhere((b) => b.categoryName == categoryName);
+      return _budgets.firstWhere(
+        (budget) => budget.categoryName == categoryName,
+      );
     } catch (_) {
       return null;
     }
   }
 
   Future<void> setBudget(String categoryName, double limit) async {
-    double currentSpent = 0;
+    if (categoryName.trim().isEmpty || limit <= 0) return;
+
     final now = DateTime.now();
-    for (var tx in _transactions) {
-      if (tx.isExpense && tx.categoryName == categoryName && tx.date.month == now.month && tx.date.year == now.year) {
-        currentSpent += tx.amount;
-      }
-    }
+    final currentSpent = _transactions
+        .where(
+          (transaction) =>
+              transaction.isExpense &&
+              transaction.categoryName == categoryName &&
+              transaction.date.month == now.month &&
+              transaction.date.year == now.year,
+        )
+        .fold<double>(0, (sum, transaction) => sum + transaction.amount);
 
     final budget = BudgetModel(
       categoryName: categoryName,
@@ -206,35 +210,31 @@ class TransactionProvider extends ChangeNotifier {
     _loadData();
   }
 
-  void _updateBudgetSpent(String categoryName, double amount) {
-    final budget = _budgetBox.get(categoryName);
-    if (budget != null) {
-      budget.spentAmount += amount;
-      if (budget.spentAmount < 0) budget.spentAmount = 0;
-      budget.save();
-    }
-  }
-
-  // GOALS Management
   Future<void> addGoal(String title, double targetAmount) async {
+    if (title.trim().isEmpty || targetAmount <= 0) return;
+
     final goal = GoalModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: title,
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      title: title.trim(),
       targetAmount: targetAmount,
-      currentAmount: 0.0,
+      currentAmount: 0,
       date: DateTime.now(),
     );
+
     await _goalsBox.put(goal.id, goal);
     _loadData();
   }
 
   Future<void> updateGoalProgress(String id, double amount) async {
+    if (amount <= 0) return;
+
     final goal = _goalsBox.get(id);
-    if (goal != null) {
-      goal.currentAmount = (goal.currentAmount + amount).clamp(0.0, goal.targetAmount);
-      await goal.save();
-      _loadData();
-    }
+    if (goal == null) return;
+
+    goal.currentAmount =
+        (goal.currentAmount + amount).clamp(0.0, goal.targetAmount).toDouble();
+    await goal.save();
+    _loadData();
   }
 
   Future<void> deleteGoal(String id) async {
@@ -242,10 +242,10 @@ class TransactionProvider extends ChangeNotifier {
     _loadData();
   }
 
-  // CHALLENGES Management
-  void _initializeDefaultChallenges() {
+  Future<void> _initializeDefaultChallenges() async {
     if (_challengesBox.isEmpty) {
-      final defaultList = [
+      final now = DateTime.now();
+      final defaultChallenges = [
         ChallengeModel(
           id: 'challenge_1',
           title: 'أسبوع بدون شراء قهوة ☕',
@@ -253,7 +253,7 @@ class TransactionProvider extends ChangeNotifier {
           targetCategory: 'طعام وشراب',
           targetReductionPercent: 10,
           durationDays: 7,
-          startDate: DateTime.now(),
+          startDate: now,
         ),
         ChallengeModel(
           id: 'challenge_2',
@@ -262,7 +262,7 @@ class TransactionProvider extends ChangeNotifier {
           targetCategory: 'تسوق',
           targetReductionPercent: 20,
           durationDays: 7,
-          startDate: DateTime.now(),
+          startDate: now,
         ),
         ChallengeModel(
           id: 'challenge_3',
@@ -271,35 +271,97 @@ class TransactionProvider extends ChangeNotifier {
           targetCategory: 'أخرى',
           targetReductionPercent: 100,
           durationDays: 1,
-          startDate: DateTime.now(),
+          startDate: now,
         ),
       ];
-      for (var ch in defaultList) {
-        _challengesBox.put(ch.id, ch);
+
+      for (final challenge in defaultChallenges) {
+        await _challengesBox.put(challenge.id, challenge);
       }
       _loadData();
     }
+
+    await evaluateChallenges();
   }
 
   Future<void> resetChallenges() async {
     await _challengesBox.clear();
-    _initializeDefaultChallenges();
+    _challenges = [];
+    notifyListeners();
+    await _initializeDefaultChallenges();
   }
 
-  void _checkChallengesOnExpenseAdded(String category, double amount) {
-    for (var ch in _challenges) {
-      if (!ch.isCompleted && !ch.isFailed) {
-        if (ch.targetCategory == category) {
-          if (ch.id == 'challenge_1' && (ch.title.contains('قهوة') || ch.title.contains('شراء'))) {
-            // Coffee challenge: fail if user spends on food/drink with title 'قهوة'
-            // We can check if title contains coffee, done at screen level or transaction level
-          }
-        }
+  Future<void> evaluateChallenges() async {
+    final now = DateTime.now();
+    bool hasChanges = false;
+
+    for (final challenge in _challenges) {
+      final start = DateTime(
+        challenge.startDate.year,
+        challenge.startDate.month,
+        challenge.startDate.day,
+      );
+      final endExclusive = start.add(Duration(days: challenge.durationDays));
+      final periodExpenses = _transactions.where((transaction) {
+        if (!transaction.isExpense) return false;
+        final transactionDay = DateTime(
+          transaction.date.year,
+          transaction.date.month,
+          transaction.date.day,
+        );
+        return !transactionDay.isBefore(start) &&
+            transactionDay.isBefore(endExclusive);
+      }).toList();
+
+      bool failed = false;
+      switch (challenge.id) {
+        case 'challenge_1':
+          failed = periodExpenses.any(_isCoffeeExpense);
+          break;
+        case 'challenge_2':
+          final shoppingTotal = periodExpenses
+              .where(
+                (transaction) =>
+                    transaction.categoryName == challenge.targetCategory,
+              )
+              .fold<double>(0, (sum, transaction) => sum + transaction.amount);
+          failed = shoppingTotal > _shoppingChallengeLimit;
+          break;
+        case 'challenge_3':
+          failed = periodExpenses.isNotEmpty;
+          break;
+        default:
+          failed = false;
+      }
+
+      final completed = !failed && !now.isBefore(endExclusive);
+      if (challenge.isFailed != failed || challenge.isCompleted != completed) {
+        challenge.isFailed = failed;
+        challenge.isCompleted = completed;
+        await challenge.save();
+        hasChanges = true;
       }
     }
+
+    if (hasChanges) notifyListeners();
   }
 
-  void _checkChallengesOnExpenseDeleted(String category, double amount) {
-    // Implement logic if deleting an expense updates challenge progress
+  bool _isCoffeeExpense(TransactionModel transaction) {
+    if (transaction.categoryName != 'طعام وشراب') return false;
+
+    final title = transaction.title.toLowerCase();
+    const coffeeKeywords = [
+      'قهوة',
+      'كوفي',
+      'كافيه',
+      'coffee',
+      'cafe',
+      'café',
+      'latte',
+      'لاتيه',
+      'cappuccino',
+      'كابتشينو',
+    ];
+    return coffeeKeywords.any(title.contains);
   }
 }
