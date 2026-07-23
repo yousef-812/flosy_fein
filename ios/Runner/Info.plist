@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Nur Al Eman</string>
+	<string>Flosy Fein</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>nur_al_eman</string>
+	<string>flosy_fein</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -66,7 +66,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Google's sample AdMob app ID. Replace only after creating this app in AdMob. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-4624889874966809~9830951650</string>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 </dict>
 </plist>
