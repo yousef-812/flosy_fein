@@ -173,7 +173,10 @@ class _ChallengesScreenState extends State<ChallengesScreen> {
     if (!DateTime.now().isBefore(end)) return 0;
 
     final remaining = end.difference(DateTime.now());
-    return (remaining.inHours / 24).ceil().clamp(0, challenge.durationDays);
+    return (remaining.inHours / 24)
+        .ceil()
+        .clamp(0, challenge.durationDays)
+        .toInt();
   }
 
   _ChallengeStatus _statusFor(
