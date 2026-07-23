@@ -2,73 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/language_provider.dart';
-import '../../models/transaction_model.dart';
-import '../../core/utils/haptic_helper.dart';
+import '../../core/utils/streak_calculator.dart';
 
 class NoSpendScreen extends StatelessWidget {
   const NoSpendScreen({super.key});
-
-  // Calculate streaks
-  Map<String, int> _calculateStreaks(List<TransactionModel> transactions) {
-    int currentStreak = 0;
-    int longestStreak = 0;
-    int tempStreak = 0;
-
-    final now = DateTime.now();
-    // Check the last 30 days
-    for (int i = 29; i >= 0; i--) {
-      final checkDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
-      final hasExpense = transactions.any((tx) =>
-          tx.isExpense &&
-          tx.date.day == checkDate.day &&
-          tx.date.month == checkDate.month &&
-          tx.date.year == checkDate.year);
-
-      if (!hasExpense) {
-        tempStreak++;
-        if (tempStreak > longestStreak) {
-          longestStreak = tempStreak;
-        }
-      } else {
-        tempStreak = 0;
-      }
-    }
-
-    // Current streak (counting backwards from today)
-    for (int i = 0; i < 30; i++) {
-      final checkDate = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
-      final hasExpense = transactions.any((tx) =>
-          tx.isExpense &&
-          tx.date.day == checkDate.day &&
-          tx.date.month == checkDate.month &&
-          tx.date.year == checkDate.year);
-
-      if (!hasExpense) {
-        currentStreak++;
-      } else {
-        break;
-      }
-    }
-
-    return {
-      'current': currentStreak,
-      'longest': longestStreak,
-    };
-  }
 
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<TransactionProvider>(context);
     final languageProvider = Provider.of<LanguageProvider>(context);
-    final streaks = _calculateStreaks(provider.transactions);
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final streaks = calculateNoSpendStreaks(
+      provider.transactions,
+      now: today,
+    );
 
-    // Days of the current month grid
+    final firstRecordedDay = _firstRecordedDay(provider);
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
-    final startWeekday = firstDayOfMonth.weekday;
-    final startOffset = (startWeekday % 7);
+    final startOffset = firstDayOfMonth.weekday % 7;
 
     return Scaffold(
       appBar: AppBar(
@@ -76,11 +30,10 @@ class NoSpendScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Streak Header Card
             Card(
               color: Colors.green.withOpacity(0.12),
               shape: RoundedRectangleBorder(
@@ -88,49 +41,44 @@ class NoSpendScreen extends StatelessWidget {
                 side: const BorderSide(color: Colors.green, width: 1.5),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Column(
-                      children: [
-                        Text(languageProvider.translate('current_streak'), style: const TextStyle(fontSize: 16)),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${streaks['current']} ${languageProvider.translate('days')}',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
-                        ),
-                      ],
+                    _StreakValue(
+                      label: languageProvider.translate('current_streak'),
+                      value: streaks.current,
+                      daysLabel: languageProvider.translate('days'),
+                      color: Colors.green,
                     ),
-                    Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.3)),
-                    Column(
-                      children: [
-                        Text(languageProvider.translate('longest_streak'), style: const TextStyle(fontSize: 16)),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${streaks['longest']} ${languageProvider.translate('days')}',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
-                        ),
-                      ],
+                    Container(
+                      width: 1,
+                      height: 40,
+                      color: Colors.grey.withOpacity(0.3),
+                    ),
+                    _StreakValue(
+                      label: languageProvider.translate('longest_streak'),
+                      value: streaks.longest,
+                      daysLabel: languageProvider.translate('days'),
+                      color: Colors.amber,
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 24),
-
-            // No Spend Calendar Legend
             Text(
               languageProvider.translate('calendar_legend'),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
             const SizedBox(height: 16),
-
-            // Calendar Grid View (Mockup of current month)
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -138,7 +86,7 @@ class NoSpendScreen extends StatelessWidget {
                     crossAxisCount: 7,
                     mainAxisSpacing: 8,
                     crossAxisSpacing: 8,
-                    childAspectRatio: 1.0,
+                    childAspectRatio: 1,
                   ),
                   itemCount: daysInMonth + startOffset,
                   itemBuilder: (context, index) {
@@ -148,29 +96,30 @@ class NoSpendScreen extends StatelessWidget {
 
                     final dayNumber = index - startOffset + 1;
                     final date = DateTime(now.year, now.month, dayNumber);
-                    
-                    // Check if date has expenses
-                    final hasExpenses = provider.transactions.any((tx) =>
-                        tx.isExpense &&
-                        tx.date.day == dayNumber &&
-                        tx.date.month == now.month &&
-                        tx.date.year == now.year);
+                    final isFuture = date.isAfter(today);
+                    final isBeforeTracking = firstRecordedDay == null ||
+                        date.isBefore(firstRecordedDay);
+                    final hasExpenses = provider.transactions.any(
+                      (transaction) =>
+                          transaction.isExpense &&
+                          transaction.date.day == dayNumber &&
+                          transaction.date.month == now.month &&
+                          transaction.date.year == now.year,
+                    );
 
-                    Color cellColor = Colors.green;
-                    if (hasExpenses) {
-                      cellColor = Colors.red;
-                    }
-
-                    // Disable future days
-                    final isFuture = date.isAfter(now);
-                    if (isFuture) {
-                      cellColor = Colors.grey.withOpacity(0.3);
-                    }
+                    final cellColor = isFuture || isBeforeTracking
+                        ? Colors.grey
+                        : hasExpenses
+                            ? Colors.red
+                            : Colors.green;
+                    final opacity = isFuture || isBeforeTracking ? 0.08 : 0.15;
 
                     return Container(
                       decoration: BoxDecoration(
-                        color: cellColor.withOpacity(0.15),
-                        border: Border.all(color: cellColor.withOpacity(0.5)),
+                        color: cellColor.withOpacity(opacity),
+                        border: Border.all(
+                          color: cellColor.withOpacity(0.45),
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       alignment: Alignment.center,
@@ -178,7 +127,11 @@ class NoSpendScreen extends StatelessWidget {
                         '$dayNumber',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isFuture ? Colors.grey : (cellColor == Colors.green ? Colors.green.shade700 : Colors.red.shade700),
+                          color: isFuture || isBeforeTracking
+                              ? Colors.grey
+                              : hasExpenses
+                                  ? Colors.red.shade700
+                                  : Colors.green.shade700,
                         ),
                       ),
                     );
@@ -187,22 +140,26 @@ class NoSpendScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Motivational quote
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     Text(
                       languageProvider.translate('no_spend_tip_title'),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       languageProvider.translate('no_spend_tip_body'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -211,6 +168,54 @@ class NoSpendScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  DateTime? _firstRecordedDay(TransactionProvider provider) {
+    if (provider.transactions.isEmpty) return null;
+
+    final dates = provider.transactions
+        .map(
+          (transaction) => DateTime(
+            transaction.date.year,
+            transaction.date.month,
+            transaction.date.day,
+          ),
+        )
+        .toList()
+      ..sort();
+    return dates.first;
+  }
+}
+
+class _StreakValue extends StatelessWidget {
+  final String label;
+  final int value;
+  final String daysLabel;
+  final Color color;
+
+  const _StreakValue({
+    required this.label,
+    required this.value,
+    required this.daysLabel,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(fontSize: 16)),
+        const SizedBox(height: 8),
+        Text(
+          '$value $daysLabel',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
   }
 }
